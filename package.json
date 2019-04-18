@@ -4,6 +4,7 @@
   "description": "Manage the Progressive Web Application 'installation' Prompt across platforms.",
   "main": "index.js",
   "scripts": {
+    "start": "http-server demos/ -p 9001 -c -i",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -26,6 +27,7 @@
   },
   "homepage": "https://github.com/docluv/add-to-homescreen#readme",
   "dependencies": {
+    "http-server": "^0.11.1",
     "uglify": "^0.1.5"
   }
 }
