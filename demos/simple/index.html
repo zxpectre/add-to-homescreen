@@ -33,6 +33,114 @@
 
 <body>
     <div class="log-target"></div>
+    <p>Major League's opening day is supposed to be a time-honored American tradition, but this year <A href="https://sports.yahoo.com/cubs-rangers-fans-miss-opening-ceremonies-due-to-long-lines-outside-stadium-212032801.html
+" target="_blank" rel="nofollow noopener">bad
+            mobile applications kept fans from enjoying games all over the country, including the Texas Rangers and
+            Chicago
+            Cubs.</a></p>
+    <blockquote class="col-md-6 mr-1 my-1">
+        <p>&quot;It’d be cool if a billion-dollar industry could figure out how to keep this from happening.&quot;</p>
+        <p><a href="https://deadspin.com/hell-is-trying-to-get-into-a-ballpark-on-opening-day-1833650389"
+                target="_blank" rel="nofollow noopener">Deadspin</a></p>
+    </blockquote>
+    <p>Instead of buying 2 pound chicken fingers, hot dogs, hamburgers and lots of beer while cheering for the home team
+        fans spent over an hour lined up to enter stadiums.</p>
+    <p>Many reported not entering stadiums till the 3rd or 4th innings. Unless you are a Dodger's fan that is
+        unacceptable.</p>
+    <p>While opening day is the source of logistical issues for any business, when things go real bad due to modern
+        technology it can go real bad.</p>
+    <p>And that is what happened during the 2019 major league baseball opening day games.</p>
+    <p>I am acutely aware of how events like baseball game tickets work. My dad used to work at the Texas Rangers park
+        and
+        finished the last two seasons working one of the stadium entrances scanning tickets.</p>
+    <p>He is a good story teller and well has shared many great stories of life at the old ballpark. Those stories even
+        inspired one of the demonstration progressive web apps I included in my <a href="https://amzn.to/2uTCevY"
+            target="_blank" rel="nofollow noopener">PWA development book</a> last year.</p>
+    <p>And that is why I know a <a href="pwa/">Progressive Web Application</a> would have solved many of the issues fans
+        experienced
+        trying to access their game tickets.</p>
+    <p>If you are new to progressive web apps (PWA) they are modern web applications that work across browsers and
+        platforms. They are designed to optimize mobile application experiences by leveraging modern capabilities and
+        best
+        practices.</p>
+    <p>PWAs can work offline thanks to local caching, take advantage of geo-location, push notifications and more.</p>
+    <p>Let's dive into the MLB fan issues and review how progressive web applications would have solved them.</p>
+    <h2>What Does the MLB Ballpark App Feature?</h2>
+    <p>To incentivize customers to download an app there has to be something compelling first. So lets review the
+        <i>features</i>
+        offered by the MLB Ballpark app.</p>
+    <div class="mx-2 col-md-6 my-1 py-1">
+        <p><i class="my-1 fas fa-baseball-ball mx-2"></i><b>Ticket Management</b></p>
+        <p><i class="my-1 fas fa-baseball-ball mx-2"></i><b>Team Schedule</b></p>
+        <p><i class="my-1 fas fa-baseball-ball mx-2"></i><b>Stadium Map & Directory</b></p>
+        <p><i class="my-1 fas fa-baseball-ball mx-2"></i><b>Rewards Program</b></p>
+        <p><i class="my-1 fas fa-baseball-ball mx-2"></i><b>Scores & Photos of Your Games</b></p>
+        <p><i class="my-1 fas fa-baseball-ball mx-2"></i><b>Designating Favorite Team</b></p>
+        <p><i class="my-1 fas fa-baseball-ball mx-2"></i><b>Social Media</b></p>
+        <p><i class="my-1 fas fa-baseball-ball mx-2"></i><b>Seat Upgrade Ability</b></p>
+        <p><i class="my-1 fas fa-baseball-ball mx-2"></i><b>Directions & Parking Info</b></p>
+    </div>
+    <p>By compelling I mean the functionality and data really needs to require an app to use. I know there is nothing in
+        the list that could not be equally accessed via a web application. So where is the incentive?</p>
+    <p>Most of the features are just rendering data, which the web has always excelled doing. I have personally built
+        dozens of applications that allow content customization, like the team favoriting. E-commerce is a no brainer,
+        so
+        ticket purchase and upgrades are doable. Maps and directions have been available for years and geo-location was
+        added to the web over a year ago.</p>
+    <p>I even built an app similar to the stadium map & directory functionality.</p>
+    <p>There is nothing here that compels me to go through the 8 or more steps to download this app and consume several
+        100MB of my limited disk space to run. Especially when a 100kb or less of HTML, CSS and a little JavaScript will
+        do.</p>
+
+    <h2 id="how-bad-tech-created-a-bad-fan-experience">How Bad Tech Created a Bad Fan Experience</h2>
+    <p>Even though major league baseball franchises appear to be independent, they aren't. They all use the same
+        underlying
+        technology stack for their 'consumer' experience.</p>
+    <p>This includes ticket purchases and digital access. You can still buy tickets at the stadium box office, but most
+        fans lean on modern digital tickets.</p>
+    <p>This year MLB policy limited tickets to just physical tickets printed on official franchise stock or within the
+        official MLB Ballpark app.</p>
+    <p>I get the need to control ticket fraud by eliminating home printed tickets, which can be fabricated. But forcing
+        fans to download an app is a bad idea, especially when that app does not offer anything a progressive web
+        application could not provide.</p>
+    <blockquote>
+        <p>&quot;...also the experience of standing in a line for 45 minutes because overdramatic security measures and
+            some pointless new technology means that fans are slowly being let into the ballpark one at a time.&quot;
+        </p>
+        <p>&quot;According to a source at the Phillies game, one security guard said that teams’ move to paperless
+            tickets
+            were to blame, as fans would get to the front of the line, attempt to use the official app that contained
+            their
+            tickets, and then watch helplessly as the app would fail.&quot;</p>
+        <p><a href="https://deadspin.com/hell-is-trying-to-get-into-a-ballpark-on-opening-day-1833650389"
+                target="_blank" rel="nofollow noopener">Deadspin</a></p>
+    </blockquote>
+    <p>I do not have any inside insight into how the MLB Ballpark app works or the back-end technology, but I have an
+        idea
+        based on my 25 years of professional software development experience.</p>
+    <p>I have built a sports ticket management solution in the past, so I know some of the unique requirements these
+        systems have.</p>
+    <figure>
+        <img data-srcset="img/mlb-ballpark-barcode-ticket-example-597x1059.jpg 597w,img/mlb-ballpark-barcode-ticket-example-460x816.jpg 460w,img/mlb-ballpark-barcode-ticket-example-320x568.jpg 320w"
+            data-src="img/mlb-ballpark-barcode-ticket-example-597x1059.jpg" class="lazy-image"
+            sizes="(max-width: 736px) 70vw,(max-width: 1194px) 60vw, 597px" alt="MLB Ballpark Barcode Ticket">
+        <noscript><img src="img/mlb-ballpark-barcode-ticket-example-597x1059.jpg"
+                alt="MLB Ballpark Barcode Ticket" /></noscript>
+        <figcaption>MLB Ballpark Barcode Ticket</figcaption>
+    </figure>
+    <p>Let's establish some usage expectations so you will know what should be accounted for when designing a system.
+    </p>
+    <p>There are 32 teams, which means no more than 16 games in a day. There are actually 15 on Thursday. The game start
+        times were staggered through out the day, typically 3-4 starting within an hour of each other.</p>
+    <p>Major league stadiums can seat between 35-45,000 fans and opening day is typically sold out across the lead.</p>
+    <p>Tickets are typically purchased on groups, 2-6 from my experience. Which means there are about 10,000 possible
+        'ticket holders' that would have the digital ticket.</p>
+    <p>Let's say 20% use printed tickets, so we are down to possibly 8000 apps to scan at the stadium entrances.</p>
+    <p>Assume there are 40 possible lines and there are most likely more on average, that means each line would need to
+        scan 200 groups of tickets.</p>
+    <p>At 15 seconds per scan (a generous amount of time) it should take about 50 minutes for fans to enter the stadium.
+    </p>
+    <p>Wait there is more...</p>
 
     <div class="modal ath-viewport d-none">
         <div class="modal-dialog modal-sm" role="document">
@@ -43,13 +151,13 @@
                 <div class="modal-body">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default btn-cancel" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-default btn-cancel" data-dismiss="modal">Not Now</button>
                     <button type="button" class="btn btn-primary btn-install">Install</button>
                 </div>
             </div>
         </div>
     </div>
-    <div class="modal native-prompt-wrapper d-none">
+    <div class="native-prompt-wrapper d-none">
         <img>
         <img>
         <img>
@@ -58,6 +166,7 @@
     <script src="js/addtohomescreen.js"></script>
     <script>
         addToHomescreen( {
+            autoHide: 0,
             logging: true,
             minSessions: 2,
             displayPace: 0

@@ -27,6 +27,41 @@
 		_instance.doLog( "a2hs", "installed" );
 	} );
 
+	var platform = {};
+
+	function checkPlatform() {
+
+		// browser info and capability
+		var _ua = window.navigator.userAgent;
+
+		platform.inPrivate = !( "localStorage" in window );
+		platform.isIDevice = ( /iphone|ipod|ipad/i ).test( _ua );
+		platform.isSamsung = /Samsung/i.test( _ua );
+		platform.isFireFox = /Firefox/i.test( _ua );
+		platform.isOpera = /opr/i.test( _ua );
+		platform.isEdge = /edg/i.test( _ua );
+
+		// Opera & FireFox only Trigger on Android
+		if ( platform.isFireFox ) {
+			platform.isFireFox = /android/i.test( _ua );
+		}
+
+		if ( platform.isOpera ) {
+			platform.isOpera = /android/i.test( _ua );
+		}
+
+		platform.isChromium = ( "onbeforeinstallprompt" in window );
+		platform.isInWebAppiOS = ( window.navigator.standalone === true );
+		platform.isInWebAppChrome = ( window.matchMedia( '(display-mode: standalone)' ).matches );
+		platform.isMobileSafari = platform.isIDevice && _ua.indexOf( 'Safari' ) > -1 && _ua.indexOf( 'CriOS' ) < 0;
+		platform.isStandalone = platform.isInWebAppiOS || platform.isInWebAppChrome;
+		platform.isiPad = ( platform.isMobileSafari && _ua.indexOf( 'iPad' ) > -1 );
+		platform.isiPhone = ( platform.isMobileSafari && _ua.indexOf( 'iPad' ) === -1 );
+		platform.isCompatible = platform.isChromium || platform.isMobileSafari ||
+			platform.isSamsung || platform.isFireFox || platform.isOpera;
+
+	}
+
 	function triggerNativePrompt() {
 
 		return _beforeInstallPrompt.prompt()
@@ -61,18 +96,20 @@
 
 	function getPlatform() {
 
-		if ( _instance.firefox ) {
+		if ( platform.isFireFox ) {
 			return "firefox";
-		} else if ( _instance.ipad ) {
+		} else if ( platform.isiPad ) {
 			return "ipad";
-		} else if ( _instance.iphone ) {
+		} else if ( platform.isiPhone ) {
 			return "iphone";
-		} else if ( _instance.opera ) {
+		} else if ( platform.isOpera ) {
 			return "opera";
-		} else if ( _instance.samsung ) {
+		} else if ( platform.isSamsung ) {
 			return "samsung";
-		} else if ( _instance.edge ) {
+		} else if ( platform.isEdge ) {
 			return "edge";
+		} else {
+			return "";
 		}
 
 
@@ -85,19 +122,26 @@
 
 		if ( ath_wrapper ) {
 
-			ath_wrapper.classList.remove( _instance.hideClass );
-			ath_wrapper.classList.add( ..._instance.options.prompt[ target ].showClasses );
+			ath_wrapper.classList.remove( _instance.options.hideClass );
+
+			var promptTarget = _instance.options.prompt[ target ];
+
+			ath_wrapper.classList.add( ...promptTarget.showClasses );
 
 			var imgs = ath_wrapper.querySelectorAll( "img" );
 
-			for ( var index = 0; index < _instance.options.prompt[ target ].imgs.length; index++ ) {
+			if ( imgs && imgs.length > 0 ) {
 
-				imgs[ index ].src = _instance.options.prompt[ target ].imgs[ index ].src;
-				imgs[ index ].alt = _instance.options.prompt[ target ].imgs[ index ].alt;
+				for ( var index = 0; index < promptTarget.imgs.length; index++ ) {
 
-				if ( _instance.options.prompt[ target ].imgs[ index ].classes ) {
+					imgs[ index ].src = promptTarget.imgs[ index ].src;
+					imgs[ index ].alt = promptTarget.imgs[ index ].alt;
 
-					imgs[ index ].classList.add( ..._instance.options.prompt[ target ].imgs[ index ].classes );
+					if ( promptTarget.imgs[ index ].classes ) {
+
+						imgs[ index ].classList.add( ...promptTarget.imgs[ index ].classes );
+
+					}
 
 				}
 
@@ -109,13 +153,7 @@
 
 	function showPreNative() {
 
-		showPlatformGuideance();
-
-	}
-
-	function displayPrompt( target ) {
-
-		var ath_wrapper = document.querySelector( _instance.options.browserWrappers[ target ] );
+		var ath_wrapper = document.querySelector( _instance.options.athWrapper );
 
 		if ( ath_wrapper ) {
 
@@ -190,6 +228,7 @@
 		onRemove: null, // executed when the message is removed
 		onAdd: null, // when the application is launched the first time from the homescreen (guesstimate)
 		onPrivate: null, // executed if user is in private mode,
+		autoHide: 10,
 		athWrapper: ".ath-viewport",
 		nativeWrapper: ".native-prompt-wrapper",
 		showClasses: {
@@ -199,16 +238,16 @@
 		prompt: {
 			"edge": {
 				showClasses: [ "edge-wrapper",
-					"animated", "fadeInUp", "d-block"
+					"animated", "fadeIn", "d-block", "right-banner"
 				],
 				imgs: [ {
-					src: "imgs/firefox-a2hs-icon.png",
+					src: "imgs/edge-a2hs-icon.png",
 					alt: "Tap the Add to Homescreen Icon"
 				} ]
 			},
 			"iphone": {
 				showClasses: [ "iphone-wrapper",
-					"animated", "fadeInUp", "d-block"
+					"animated", "fadeIn", "d-block"
 				],
 				imgs: [ {
 						src: "imgs/ios-safari-share-button-highlight.jpg",
@@ -239,7 +278,7 @@
 			},
 			"firefox": {
 				showClasses: [ "firefox-wrapper",
-					"animated", "fadeInUp", "d-block"
+					"animated", "fadeIn", "d-block"
 				],
 				imgs: [ {
 					src: "imgs/firefox-a2hs-icon.png",
@@ -248,7 +287,7 @@
 			},
 			"samsung": {
 				showClasses: [ "samsung-wrapper",
-					"animated", "fadeInUp", "d-block"
+					"animated", "fadeIn", "d-block"
 				],
 				imgs: [ {
 					src: "imgs/samsung-internet-a2hs-icon.png",
@@ -257,7 +296,7 @@
 			},
 			"opera": {
 				showClasses: [ "opera-home-screen-wrapper",
-					"animated", "fadeInUp", "d-block"
+					"animated", "fadeIn", "d-block"
 				],
 				imgs: [ {
 					src: "imgs/opera-add-to-homescreen.png",
@@ -267,31 +306,7 @@
 		}
 	};
 
-	// browser info and capability
-	var _ua = window.navigator.userAgent;
-
-	ath.inPrivate = !( "localStorage" in window );
-	ath.isIDevice = ( /iphone|ipod|ipad/i ).test( _ua );
-	ath.isSamsung = /Samsung/i.test( _ua );
-	ath.isFireFox = /Firefox/i.test( _ua );
-	ath.isOpera = /opr/i.test( _ua );
-	ath.edge = /edg/i.test( _ua );
-
-	if ( ath.isFireFox ) {
-		ath.isFireFox = /android/i.test( _ua );
-	}
-
-	if ( ath.isOpera ) {
-		ath.isOpera = /android/i.test( _ua );
-	}
-
-	ath.isChromium = ( "onbeforeinstallprompt" in window );
-	ath.isInWebAppiOS = ( window.navigator.standalone === true );
-	ath.isInWebAppChrome = ( window.matchMedia( '(display-mode: standalone)' ).matches );
-	ath.isMobileSafari = ath.isIDevice && _ua.indexOf( 'Safari' ) > -1 && _ua.indexOf( 'CriOS' ) < 0;
-	ath.isStandalone = ath.isInWebAppiOS || ath.isInWebAppChrome;
-	ath.isTablet = ( ath.isMobileSafari && _ua.indexOf( 'iPad' ) > -1 );
-	ath.isCompatible = ath.isChromium || ath.isMobileSafari || ath.isSamsung || ath.isFireFox || ath.isOpera;
+	checkPlatform();
 
 	var _defaultSession = {
 		lastDisplayTime: 0, // last time we displayed the message
@@ -351,26 +366,18 @@
 
 		ath.closePrompt();
 
-		if ( !ath.isChromium ) {
+		if ( !platform.isChromium ) {
 
 			// TODO: beforeInstallPrompt not available, so guide user to A2HS
 			ath.doLog( "not chromium, guide user" );
 
 		} else {
 
-			var bipCounter = 0;
-
-			//			var refreshId = setInterval( function () {
-
 			if ( _beforeInstallPrompt ) {
 
-				// clearInterval( refreshId );
-				// refreshId = 0;
+				_instance.doLog( "prompting" );
 
-				//				_instance.doLog( "prompting" );
-
-				showPlatformGuideance();
-				//				triggerNativePrompt();
+				triggerNativePrompt();
 
 			} else {
 
@@ -378,17 +385,6 @@
 				showPlatformGuideance();
 
 			}
-
-			bipCounter += 1;
-
-			if ( bipCounter > 60 ) {
-
-				clearInterval( refreshId );
-				refreshId = 0;
-
-			}
-
-			//			}, 1000 );
 
 		}
 
@@ -422,52 +418,53 @@
 		var manifestEle = document.querySelector( "[rel='manifest']" );
 
 		if ( !manifestEle ) {
-			ath.isCompatible = false;
+			platform.isCompatible = false;
 		}
 
 		navigator.serviceWorker.getRegistration().then( function ( sw ) {
 
-			this.sw = sw;
+			_instance.sw = sw;
 
-			if ( !this.sw ) {
-				ath.isCompatible = false;
+			if ( !_instance.sw ) {
+				platform.isCompatible = false;
 			}
 
 			session.sessions += 1;
-			this.updateSession();
+			_instance.updateSession();
 
 			// override defaults that are dependent on each other
-			if ( this.options && this.options.debug && ( typeof this.options.logging === "undefined" ) ) {
-				this.options.logging = true;
+			if ( _instance.options && _instance.options.debug && ( typeof _instance.options.logging === "undefined" ) ) {
+				_instance.options.logging = true;
 			}
 
 			// normalize some options
-			this.options.mandatory = this.options.mandatory && ( 'standalone' in window.navigator || this.options.debug );
+			_instance.options.mandatory = _instance.options.mandatory && ( 'standalone' in window.navigator ||
+				_instance.options.debug );
 
-			this.options.modal = this.options.modal || this.options.mandatory;
+			_instance.options.modal = _instance.options.modal || _instance.options.mandatory;
 
-			if ( this.options.mandatory ) {
-				this.options.startDelay = -0.5; // make the popup hasty
+			if ( _instance.options.mandatory ) {
+				_instance.options.startDelay = -0.5; // make the popup hasty
 			}
 
 			// setup the debug environment
-			if ( this.options.debug ) {
+			if ( _instance.options.debug ) {
 
-				ath.isCompatible = true;
+				platform.isCompatible = true;
 
 			}
 
-			if ( this.options.onInit ) {
-				this.options.onInit.call( this );
+			if ( _instance.options.onInit ) {
+				_instance.options.onInit.call( _instance );
 			}
 
-			if ( this.options.autostart ) {
+			if ( _instance.options.autostart ) {
 
-				this.doLog( "Add to homescreen: autostart displaying callout" );
+				_instance.doLog( "Add to homescreen: autostart displaying callout" );
 
-				if ( this.canPrompt() ) {
+				if ( _instance.canPrompt() ) {
 
-					this.show();
+					_instance.show();
 
 				}
 
@@ -499,14 +496,14 @@
 
 			}
 
-			if ( ath.inPrivate ) {
+			if ( platform.inPrivate ) {
 
 				this.doLog( "Add to homescreen: not displaying callout because using Private browsing" );
 				return false;
 			}
 
 			// the device is not supported
-			if ( !ath.isCompatible ) {
+			if ( !platform.isCompatible ) {
 				this.doLog( "Add to homescreen: not displaying callout because device not supported" );
 				return false;
 			}
@@ -573,7 +570,7 @@
 			}
 
 			// check if the app is in stand alone mode
-			if ( ath.isStandalone ) {
+			if ( platform.isStandalone ) {
 
 				// execute the onAdd event if we haven't already
 				if ( !session.added ) {
@@ -607,9 +604,6 @@
 
 			this._canPrompt = true;
 
-			// all checks passed, ready to display
-			this.ready = true;
-
 			return true;
 
 		},
@@ -630,7 +624,23 @@
 
 			this.updateSession();
 
-			this._delayedShow();
+			if ( document.readyState === "interactive" || document.readyState === "complete" ) {
+
+				this._delayedShow();
+
+			} else {
+
+				document.onreadystatechange = function () {
+
+					if ( document.readyState === 'complete' ) {
+
+						this._delayedShow();
+
+					}
+
+				};
+
+			}
 
 		},
 
@@ -640,7 +650,7 @@
 
 		_show: function () {
 
-			if ( ( ath.isChromium && _beforeInstallPrompt ) ) {
+			if ( ( platform.isChromium && _beforeInstallPrompt ) ) {
 
 				showPreNative();
 
@@ -650,10 +660,32 @@
 
 			}
 
+			if ( this.options.autoHide && this.options.autoHide > 0 ) {
+
+				setTimeout( this.autoHide, this.options.autoHide * 1000 );
+
+			}
+
 
 			// fire the custom onShow event
 			if ( this.options.onShow ) {
 				this.options.onShow.call( this );
+			}
+
+		},
+
+		autoHide: function () {
+
+			var target = getPlatform(),
+				ath_wrapper = document.querySelector( _instance.options.nativeWrapper );
+
+			if ( ath_wrapper ) {
+
+				var promptTarget = _instance.options.prompt[ target ];
+
+				ath_wrapper.classList.remove( ...promptTarget.showClasses );
+				ath_wrapper.classList.add( _instance.options.hideClass );
+
 			}
 
 		},
