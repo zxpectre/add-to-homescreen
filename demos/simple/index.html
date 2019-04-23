@@ -27,32 +27,47 @@
     <link rel="stylesheet" type="text/css" href="style/addtohomescreen.css">
     <link rel="stylesheet" type="text/css" href="style/animate.css">
 
+    <link href="manifest.json" rel="manifest">
+
 </head>
 
 <body>
+    <div class="log-target"></div>
 
-    <div class="modal ath-viewport">
+    <div class="modal ath-viewport d-none">
         <div class="modal-dialog modal-sm" role="document">
             <div class="modal-content ath-container">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">Install Love2Dev?</h5>
                 </div>
                 <div class="modal-body">
-
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary">Install</button>
+                    <button type="button" class="btn btn-default btn-cancel" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary btn-install">Install</button>
                 </div>
             </div>
         </div>
+    </div>
+    <div class="modal native-prompt-wrapper d-none">
+        <img>
+        <img>
+        <img>
     </div>
 
     <script src="js/addtohomescreen.js"></script>
     <script>
         addToHomescreen( {
-            logging: true
+            logging: true,
+            minSessions: 2,
+            displayPace: 0
         } );
+
+        if ( "serviceWorker" in navigator ) {
+
+            navigator.serviceWorker.register( "/sw.js" );
+
+        }
     </script>
 </body>
 

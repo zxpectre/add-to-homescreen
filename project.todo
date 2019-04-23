@@ -1,0 +1,18 @@
+Prompt Script:
+    ☐ display accoding to rules
+    ✔ rely on beforeinstallprompt event and native prompt @done (4/21/2019, 10:32:00 AM)
+    ✔ display modal prompt to trigger native prompt @done (4/21/2019, 10:33:04 AM)
+    ✔ display modal prompt to guide user to browser install button @done (4/21/2019, 10:33:37 AM)
+
+
+Prompt Management:
+    ☐ Complete session (status) object definition
+    ✔ persist session @done (4/21/2019, 8:10:58 AM)
+    ✔ update session @done (4/21/2019, 8:11:06 AM)
+    ☐ allow custom rules (only show if [criteria])
+
+Prompt Displays:
+    ☐ iOS Add to Homescreen modal
+    ☐ FireFox modal
+    ☐ Samsung Internet modal
+    ☐ Opera Modal

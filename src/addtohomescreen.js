@@ -1,8 +1,6 @@
 /* Add to Homescreen v4.0.0 ~ (c) 2019 Chris Love ~ @license: https://love2dev.com/pwa/add-to-homescreen/ */
 
 
-// TODO: bind install button handler method
-// TODO: bind cancel button handler method
 ( function ( window, document, undefined ) {
 	/*
 	       _   _ _____     _____
@@ -223,6 +221,7 @@
 			//if not then don't bother asking to add to install the PWA
 			if ( !( "serviceWorker" in navigator ) ) {
 
+				this.doLog( "Add to homescreen: not displaying callout because service workers are not supported" );
 				return false;
 
 			}
@@ -336,7 +335,6 @@
 				}
 
 			}
-
 
 			this._canPrompt = true;
 
