@@ -27,7 +27,10 @@
 		_instance.doLog( "a2hs", "installed" );
 	} );
 
-	var platform = {};
+	var platform = {},
+		defaultPrompt = {
+			title: "Install this Progressive Web App?"
+		};
 
 	function checkPlatform() {
 
@@ -62,6 +65,7 @@
 
 	}
 
+	/* displays native A2HS prompt & stores results */
 	function triggerNativePrompt() {
 
 		return _beforeInstallPrompt.prompt()
@@ -74,13 +78,15 @@
 			.then( function ( choiceResult ) {
 
 				session.added = ( choiceResult.outcome === "accepted" );
-				_instance.updateSession();
 
 				if ( session.added ) {
 					_instance.doLog( "User accepted the A2HS prompt" );
 				} else {
+					session.optedout = true;
 					_instance.doLog( "User dismissed the A2HS prompt" );
 				}
+
+				_instance.updateSession();
 
 				_beforeInstallPrompt = null;
 
@@ -89,14 +95,16 @@
 
 				_instance.doLog( err );
 
-				showNativeFallback();
+				showPlatformGuideance( true );
 
 			} );
 	}
 
-	function getPlatform() {
+	function getPlatform( native ) {
 
-		if ( platform.isFireFox ) {
+		if ( platform.isChromium && ( native === undefined && !native ) ) {
+			return "native";
+		} else if ( platform.isFireFox ) {
 			return "firefox";
 		} else if ( platform.isiPad ) {
 			return "ipad";
@@ -112,38 +120,53 @@
 			return "";
 		}
 
-
 	}
 
-	function showPlatformGuideance() {
+	function showPlatformGuideance( skipNative ) {
 
 		var target = getPlatform(),
-			ath_wrapper = document.querySelector( _instance.options.nativeWrapper );
+			ath_wrapper = document.querySelector( _instance.options.athWrapper );
 
 		if ( ath_wrapper ) {
 
-			ath_wrapper.classList.remove( _instance.options.hideClass );
+			if ( !skipNative && target === "native" && _beforeInstallPrompt ) {
 
-			var promptTarget = _instance.options.prompt[ target ];
+				platform.closePrompt();
+				triggerNativePrompt();
 
-			ath_wrapper.classList.add( ...promptTarget.showClasses );
+			} else {
 
-			var imgs = ath_wrapper.querySelectorAll( "img" );
+				var promptTarget = Object.assign( {}, defaultPrompt, _instance.options.prompt[ target ] );
 
-			if ( imgs && imgs.length > 0 ) {
+				var ath_body = ath_wrapper.querySelector( _instance.options.promptDlg.body ),
+					ath_footer = ath_wrapper.querySelector( _instance.options.promptDlg.footer ),
+					ath_cancel = ath_wrapper.querySelector( _instance.options.promptDlg.cancel ),
+					ath_install = ath_wrapper.querySelector( _instance.options.promptDlg.install );
 
-				for ( var index = 0; index < promptTarget.imgs.length; index++ ) {
+				if ( promptTarget.imgs && promptTarget.imgs.length > 0 ) {
 
-					imgs[ index ].src = promptTarget.imgs[ index ].src;
-					imgs[ index ].alt = promptTarget.imgs[ index ].alt;
+					for ( var index = 0; index < promptTarget.imgs.length; index++ ) {
 
-					if ( promptTarget.imgs[ index ].classes ) {
+						var img = new Image();
 
-						imgs[ index ].classList.add( ...promptTarget.imgs[ index ].classes );
+						img.src = promptTarget.imgs[ index ].src;
+						img.alt = promptTarget.imgs[ index ].alt;
+
+						if ( promptTarget.imgs[ index ].classes ) {
+
+							img.classList.add( ...promptTarget.imgs[ index ].classes );
+
+						}
+
+						img.classList.add( _instance.options.showClass );
+
+						ath_body.appendChild( img );
 
 					}
 
 				}
+
+				ath_footer.classList.add( _instance.options.hideClass );
 
 			}
 
@@ -151,25 +174,7 @@
 
 	}
 
-	function showPreNative() {
-
-		var ath_wrapper = document.querySelector( _instance.options.athWrapper );
-
-		if ( ath_wrapper ) {
-
-			ath_wrapper.classList.remove( _instance.hideClass );
-			ath_wrapper.classList.add( ..._instance.options.showClasses[ target ] );
-
-		}
-
-	}
-
-	function showNativeFallback() {
-
-		console.log( "display install menu prompt" );
-		showPlatformGuideance();
-	}
-
+	//can be used to calculate the next prime number, a possible way to calculate when to next prompt
 	function nextPrime( value ) {
 
 		while ( true ) {
@@ -211,6 +216,7 @@
 	// default options
 	ath.defaults = {
 		appID: appID, // local storage name (no need to change)
+		appName: "Progressive Web App",
 		debug: false, // override browser checks
 		logging: false, // log reasons for showing or not showing to js console; defaults to true when debug is true
 		modal: false, // prevent further actions until the message is closed
@@ -221,6 +227,7 @@
 		startDelay: 1, // display the message after that many seconds from page load
 		lifespan: 15, // life of the message in seconds
 		displayPace: 1440, // minutes before the message is shown again (0: display every time, default 24 hours)
+		displayNextPrime: false,
 		maxDisplayCount: 0, // absolute maximum number of times the message will be shown to the user (0: no limit)
 		validLocation: [], // list of pages where the message will be shown (array of regexes)
 		onInit: null, // executed on instance creation
@@ -230,12 +237,28 @@
 		onPrivate: null, // executed if user is in private mode,
 		autoHide: 10,
 		athWrapper: ".ath-viewport",
-		nativeWrapper: ".native-prompt-wrapper",
-		showClasses: {
-			"default": [ "animated", "fadeInUp", "d-block" ]
-		},
+		showClasses: [ "animated", "d-block" ],
+		showClass: "d-block",
 		hideClass: "d-none",
+		promptDlg: {
+			body: ".modal-body",
+			title: ".modal-title",
+			footer: ".modal-footer",
+			cancel: ".btn-cancel",
+			install: ".btn-install",
+			action: {
+				"ok": "Install",
+				"cancel": "Not Now"
+			}
+		},
 		prompt: {
+			"native": {
+				showClasses: [ "fadeInUp", "right-banner" ],
+				action: {
+					"ok": "Install",
+					"cancel": "Not Now"
+				}
+			},
 			"edge": {
 				showClasses: [ "edge-wrapper",
 					"animated", "fadeIn", "d-block", "right-banner"
@@ -314,8 +337,8 @@
 		displayCount: 0, // number of times the message has been shown
 		optedout: false, // has the user opted out
 		added: false, // has been actually added to the homescreen
-		requireActiveSW: true,
-		sessions: 0
+		sessions: 0,
+		nextSession: 0 //tie this to nextPrime Counter
 	};
 
 	session = session ? JSON.parse( session ) : _defaultSession;
@@ -325,8 +348,6 @@
 	function beforeInstallPrompt( evt ) {
 
 		_beforeInstallPrompt = evt;
-
-		_instance.doLog( "grabbed beforeInstallPrompt object" );
 
 	}
 
@@ -348,63 +369,33 @@
 
 	};
 
-	ath.closePrompt = function () {
+	platform.closePrompt = function () {
 
-		var ath_wrapper = document.querySelector( ".ath-viewport" );
+		var ath_wrapper = document.querySelector( _instance.options.athWrapper );
 
 		if ( ath_wrapper ) {
-			// TODO: change classes to display prompt to be based on the configuration object
-			ath_wrapper.classList.remove( "d-block" );
+
+			ath_wrapper.classList.remove( ..._instance.options.showClasses );
 
 		}
 
 	};
 
-	ath._handleInstall = function ( evt ) {
+	platform.handleInstall = function ( evt ) {
 
-		//		evt.preventDefault();
+		if ( _beforeInstallPrompt ) {
 
-		ath.closePrompt();
-
-		if ( !platform.isChromium ) {
-
-			// TODO: beforeInstallPrompt not available, so guide user to A2HS
-			ath.doLog( "not chromium, guide user" );
+			platform.closePrompt();
+			triggerNativePrompt();
 
 		} else {
 
-			if ( _beforeInstallPrompt ) {
-
-				_instance.doLog( "prompting" );
-
-				triggerNativePrompt();
-
-			} else {
-
-				_instance.doLog( "display browser/plaform specific guidance here" );
-				showPlatformGuideance();
-
-			}
+			showPlatformGuideance();
 
 		}
 
 		return false;
 	};
-
-	var installBtn = document.querySelector( ".btn-install" ),
-		cancelBtn = document.querySelector( ".btn-cancel" );
-
-	if ( installBtn ) {
-
-		installBtn.addEventListener( "click", ath._handleInstall );
-
-	}
-
-	if ( cancelBtn ) {
-
-		cancelBtn.addEventListener( "click", ath.closePrompt );
-
-	}
 
 	// TODO refactor long class method into smaller, more manageable functions
 	ath.Class = function ( options ) {
@@ -421,58 +412,60 @@
 			platform.isCompatible = false;
 		}
 
-		navigator.serviceWorker.getRegistration().then( function ( sw ) {
-
-			_instance.sw = sw;
-
-			if ( !_instance.sw ) {
-				platform.isCompatible = false;
-			}
-
-			session.sessions += 1;
-			_instance.updateSession();
-
-			// override defaults that are dependent on each other
-			if ( _instance.options && _instance.options.debug && ( typeof _instance.options.logging === "undefined" ) ) {
-				_instance.options.logging = true;
-			}
-
-			// normalize some options
-			_instance.options.mandatory = _instance.options.mandatory && ( 'standalone' in window.navigator ||
-				_instance.options.debug );
-
-			_instance.options.modal = _instance.options.modal || _instance.options.mandatory;
-
-			if ( _instance.options.mandatory ) {
-				_instance.options.startDelay = -0.5; // make the popup hasty
-			}
-
-			// setup the debug environment
-			if ( _instance.options.debug ) {
-
-				platform.isCompatible = true;
-
-			}
-
-			if ( _instance.options.onInit ) {
-				_instance.options.onInit.call( _instance );
-			}
-
-			if ( _instance.options.autostart ) {
-
-				_instance.doLog( "Add to homescreen: autostart displaying callout" );
-
-				if ( _instance.canPrompt() ) {
-
-					_instance.show();
-
-				}
-
-			}
-
-		} );
+		navigator.serviceWorker.getRegistration().then( afterSWCheck );
 
 	};
+
+	function afterSWCheck( sw ) {
+
+		_instance.sw = sw;
+
+		if ( !_instance.sw ) {
+			platform.isCompatible = false;
+		}
+
+		session.sessions += 1;
+		_instance.updateSession();
+
+		// override defaults that are dependent on each other
+		if ( _instance.options && _instance.options.debug && ( typeof _instance.options.logging === "undefined" ) ) {
+			_instance.options.logging = true;
+		}
+
+		// normalize some options
+		_instance.options.mandatory = _instance.options.mandatory && ( 'standalone' in window.navigator ||
+			_instance.options.debug );
+
+		_instance.options.modal = _instance.options.modal || _instance.options.mandatory;
+
+		if ( _instance.options.mandatory ) {
+			_instance.options.startDelay = -0.5; // make the popup hasty
+		}
+
+		// setup the debug environment
+		if ( _instance.options.debug ) {
+
+			platform.isCompatible = true;
+
+		}
+
+		if ( _instance.options.onInit ) {
+			_instance.options.onInit.call( _instance );
+		}
+
+		if ( _instance.options.autostart ) {
+
+			_instance.doLog( "Add to homescreen: autostart displaying callout" );
+
+			if ( _instance.canPrompt() ) {
+
+				_instance.show();
+
+			}
+
+		}
+
+	}
 
 	ath.Class.prototype = {
 
@@ -543,13 +536,18 @@
 			}
 
 			if ( !isValidLocation ) {
+				this.doLog( "Add to homescreen: not displaying callout because not a valid location" );
 				return false;
 			}
 
-			this.doLog( "this.options: " + JSON.stringify( this.options ) );
-
 			if ( session.sessions < this.options.minSessions ) {
 				this.doLog( "Add to homescreen: not displaying callout because not enough visits" );
+				return false;
+			}
+
+			if ( ( this.options.nextSession && this.options.nextSession > 0 ) &&
+				session.sessions >= this.options.nextSession ) {
+				this.doLog( "Add to homescreen: not displaying callout because waiting on session " + this.options.nextSession );
 				return false;
 			}
 
@@ -561,11 +559,6 @@
 
 			if ( session.added ) {
 				this.doLog( "Add to homescreen: not displaying callout because already added to the homescreen" );
-				return false;
-			}
-
-			if ( !isValidLocation ) {
-				this.doLog( "Add to homescreen: not displaying callout because not a valid location" );
 				return false;
 			}
 
@@ -622,6 +615,12 @@
 			session.lastDisplayTime = Date.now();
 			session.displayCount++;
 
+			if ( _instance.options.displayNextPrime ) {
+
+				session.nextSession = nextPrime( session.session );
+
+			}
+
 			this.updateSession();
 
 			if ( document.readyState === "interactive" || document.readyState === "complete" ) {
@@ -650,13 +649,46 @@
 
 		_show: function () {
 
-			if ( ( platform.isChromium && _beforeInstallPrompt ) ) {
+			var target = getPlatform(),
+				ath_wrapper = document.querySelector( _instance.options.athWrapper );
 
-				showPreNative();
+			if ( ath_wrapper && !session.optedout ) {
 
-			} else {
+				ath_wrapper.classList.remove( _instance.options.hideClass );
 
-				showPlatformGuideance();
+				var promptTarget = Object.assign( {}, defaultPrompt, _instance.options.prompt[ target ] );
+
+				if ( promptTarget.showClasses ) {
+
+					promptTarget.showClasses = promptTarget.showClasses.concat( _instance.options.showClasses );
+
+				} else {
+
+					promptTarget.showClasses = _instance.options.showClasses;
+
+				}
+
+				ath_wrapper.classList.add( ...promptTarget.showClasses );
+
+				var ath_body = ath_wrapper.querySelector( _instance.options.promptDlg.body ),
+					ath_title = ath_wrapper.querySelector( _instance.options.promptDlg.title ),
+					ath_footer = ath_wrapper.querySelector( _instance.options.promptDlg.footer ),
+					ath_cancel = ath_wrapper.querySelector( _instance.options.promptDlg.cancel ),
+					ath_install = ath_wrapper.querySelector( _instance.options.promptDlg.install );
+
+				if ( ath_title ) {
+					ath_title.innerText = promptTarget.title;
+				}
+
+				ath_footer.classList.remove( _instance.options.hideClass );
+
+				ath_install.addEventListener( "click", platform.handleInstall );
+				ath_install.classList.remove( _instance.options.hideClass );
+				ath_install.innerText = ( promptTarget.action && promptTarget.action.ok ) ? promptTarget.action.ok : _instance.options.promptDlg.action.ok;
+
+				ath_cancel.addEventListener( "click", platform.closePrompt );
+				ath_cancel.classList.remove( _instance.options.hideClass );
+				ath_cancel.innerText = ( promptTarget.action && promptTarget.action.cancel ) ? promptTarget.action.cancel : _instance.options.promptDlg.action.cancel;
 
 			}
 
@@ -665,7 +697,6 @@
 				setTimeout( this.autoHide, this.options.autoHide * 1000 );
 
 			}
-
 
 			// fire the custom onShow event
 			if ( this.options.onShow ) {
@@ -677,11 +708,12 @@
 		autoHide: function () {
 
 			var target = getPlatform(),
-				ath_wrapper = document.querySelector( _instance.options.nativeWrapper );
+				ath_wrapper = document.querySelector( _instance.options.athWrapper );
 
 			if ( ath_wrapper ) {
 
 				var promptTarget = _instance.options.prompt[ target ];
+				promptTarget.showClasses = promptTarget.showClasses.concat( _instance.options.showClasses );
 
 				ath_wrapper.classList.remove( ...promptTarget.showClasses );
 				ath_wrapper.classList.add( _instance.options.hideClass );
