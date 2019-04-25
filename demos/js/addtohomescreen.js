@@ -751,7 +751,7 @@
 
 		trigger: function () {
 
-			this._show.bind( this );
+			this._show();
 
 		},
 
