@@ -63,6 +63,8 @@
 		platform.isCompatible = platform.isChromium || platform.isMobileSafari ||
 			platform.isSamsung || platform.isFireFox || platform.isOpera;
 
+		ath.doLog( JSON.stringify( platform ) );
+
 	}
 
 	/* displays native A2HS prompt & stores results */

@@ -1,8 +1,9 @@
 {
-    "lastDisplayTime": 1556110552557,
+    "lastDisplayTime": 1556126427693,
     "returningVisitor": true,
-    "displayCount": 116,
+    "displayCount": 125,
     "optedout": false,
-    "added": false,
-    "sessions": 117
+    "added": true,
+    "requireActiveSW": true,
+    "sessions": 128
 }

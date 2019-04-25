@@ -25,11 +25,19 @@
 
 		// TODO: update session object to reflect the PWA has been installed
 		_instance.doLog( "a2hs", "installed" );
+
+		session.added = true;
+
+		_instance.updateSession();
+
 	} );
 
 	var platform = {},
 		defaultPrompt = {
-			title: "Install this Progressive Web App?"
+			title: "Install this PWA?",
+			src: "imgs/pwa-logo-50x50.png",
+			cancelMsg: "Not Now",
+			installMsg: "Install"
 		};
 
 	function checkPlatform() {
@@ -95,7 +103,7 @@
 
 				_instance.doLog( err );
 
-				showPlatformGuideance( true );
+				showPlatformGuidance( true );
 
 			} );
 	}
@@ -116,15 +124,24 @@
 			return "samsung";
 		} else if ( platform.isEdge ) {
 			return "edge";
+		} else if ( platform.isChromium ) {
+			return "chromium";
 		} else {
 			return "";
 		}
 
 	}
 
-	function showPlatformGuideance( skipNative ) {
+	//show hint images for browsers without native prompt
+	/*
+		Currently: iOS Safari
+			FireFox Android
+			Samsung Android
+			Opera Android
+	*/
+	function showPlatformGuidance( skipNative ) {
 
-		var target = getPlatform(),
+		var target = getPlatform( skipNative ),
 			ath_wrapper = document.querySelector( _instance.options.athWrapper );
 
 		if ( ath_wrapper ) {
@@ -136,14 +153,14 @@
 
 			} else {
 
-				var promptTarget = Object.assign( {}, defaultPrompt, _instance.options.prompt[ target ] );
+				var promptTarget = Object.assign( {}, defaultPrompt, _instance.options.customPrompt, _instance.options.prompt[ target ] );
 
-				var ath_body = ath_wrapper.querySelector( _instance.options.promptDlg.body ),
-					ath_footer = ath_wrapper.querySelector( _instance.options.promptDlg.footer ),
-					ath_cancel = ath_wrapper.querySelector( _instance.options.promptDlg.cancel ),
-					ath_install = ath_wrapper.querySelector( _instance.options.promptDlg.install );
+				var ath_body = ath_wrapper.querySelector( _instance.options.promptDlg.body );
 
 				if ( promptTarget.imgs && promptTarget.imgs.length > 0 ) {
+
+					ath_body.innerHTML = "";
+					ath_body.classList.add( _instance.options.athGuidance );
 
 					for ( var index = 0; index < promptTarget.imgs.length; index++ ) {
 
@@ -165,8 +182,6 @@
 					}
 
 				}
-
-				ath_footer.classList.add( _instance.options.hideClass );
 
 			}
 
@@ -236,14 +251,16 @@
 		onAdd: null, // when the application is launched the first time from the homescreen (guesstimate)
 		onPrivate: null, // executed if user is in private mode,
 		autoHide: 10,
-		athWrapper: ".ath-viewport",
-		showClasses: [ "animated", "d-block" ],
-		showClass: "d-block",
+		customPrompt: {}, //allow customization of prompt content
+		athWrapper: ".ath-container",
+		athGuidance: "ath-guidance",
+		showClasses: [ "animated", "d-flex" ],
+		showClass: "d-flex",
 		hideClass: "d-none",
 		promptDlg: {
-			body: ".modal-body",
-			title: ".modal-title",
-			footer: ".modal-footer",
+			title: ".ath-banner-title",
+			body: ".ath-banner",
+			logo: ".ath-prompt-logo",
 			cancel: ".btn-cancel",
 			install: ".btn-install",
 			action: {
@@ -268,6 +285,15 @@
 					alt: "Tap the Add to Homescreen Icon"
 				} ]
 			},
+			"chromium": {
+				showClasses: [ "chromium-wrapper",
+					"animated", "fadeIn", "d-block", "right-banner"
+				],
+				imgs: [ {
+					src: "imgs/chromium-guidance.png",
+					alt: "Tap the Add to Homescreen Icon"
+				} ]
+			},
 			"iphone": {
 				showClasses: [ "iphone-wrapper",
 					"animated", "fadeIn", "d-block"
@@ -279,14 +305,14 @@
 					{
 						src: "imgs/iphone-a2hs-swipe-to-right.jpg",
 						classes: [ "animated", "fadeIn", "overlay-1",
-							"delay-4s"
+							"delay-2s"
 						],
 						alt: "Swipe to the right"
 					},
 					{
 						src: "imgs/iphone-a2hs-icon-highlight.jpg",
 						classes: [ "animated", "fadeIn", "overlay-2",
-							"delay-7s"
+							"delay-4s"
 						],
 						alt: "Tap the Add to Homescreen Icon"
 					}
@@ -347,6 +373,8 @@
 
 	function beforeInstallPrompt( evt ) {
 
+		evt.preventDefault();
+
 		_beforeInstallPrompt = evt;
 
 	}
@@ -390,7 +418,7 @@
 
 		} else {
 
-			showPlatformGuideance();
+			showPlatformGuidance( true );
 
 		}
 
@@ -649,52 +677,68 @@
 
 		_show: function () {
 
-			var target = getPlatform(),
-				ath_wrapper = document.querySelector( _instance.options.athWrapper );
+			if ( _beforeInstallPrompt ) {
 
-			if ( ath_wrapper && !session.optedout ) {
+				triggerNativePrompt();
 
-				ath_wrapper.classList.remove( _instance.options.hideClass );
+			} else {
 
-				var promptTarget = Object.assign( {}, defaultPrompt, _instance.options.prompt[ target ] );
+				var target = getPlatform(),
+					ath_wrapper = document.querySelector( _instance.options.athWrapper );
 
-				if ( promptTarget.showClasses ) {
+				if ( ath_wrapper && !session.optedout ) {
 
-					promptTarget.showClasses = promptTarget.showClasses.concat( _instance.options.showClasses );
+					ath_wrapper.classList.remove( _instance.options.hideClass );
 
-				} else {
+					var promptTarget = Object.assign( {}, defaultPrompt, _instance.options.customPrompt, _instance.options.prompt[ target ] );
 
-					promptTarget.showClasses = _instance.options.showClasses;
+					if ( promptTarget.showClasses ) {
+
+						promptTarget.showClasses = promptTarget.showClasses.concat( _instance.options.showClasses );
+
+					} else {
+
+						promptTarget.showClasses = _instance.options.showClasses;
+
+					}
+
+					ath_wrapper.classList.add( ...promptTarget.showClasses );
+
+					var ath_title = ath_wrapper.querySelector( _instance.options.promptDlg.title ),
+						ath_logo = ath_wrapper.querySelector( _instance.options.promptDlg.logo ),
+						ath_cancel = ath_wrapper.querySelector( _instance.options.promptDlg.cancel ),
+						ath_install = ath_wrapper.querySelector( _instance.options.promptDlg.install );
+
+					if ( ath_title && promptTarget.title ) {
+						ath_title.innerText = promptTarget.title;
+					}
+
+					if ( ath_logo && promptTarget.src ) {
+						ath_logo.src = promptTarget.src;
+						ath_logo.alt = promptTarget.title || "Install PWA";
+					}
+
+					if ( ath_install ) {
+						ath_install.addEventListener( "click", platform.handleInstall );
+						ath_install.classList.remove( _instance.options.hideClass );
+						ath_install.innerText = promptTarget.installMsg ? promptTarget.installMsg :
+							( ( promptTarget.action && promptTarget.action.ok ) ? promptTarget.action.ok : _instance.options.promptDlg.action.ok );
+					}
+
+					if ( ath_cancel ) {
+						ath_cancel.addEventListener( "click", platform.closePrompt );
+						ath_cancel.classList.remove( _instance.options.hideClass );
+						ath_cancel.innerText = promptTarget.cancelMsg ? promptTarget.cancelMsg :
+							( ( promptTarget.action && promptTarget.action.cancel ) ? promptTarget.action.cancel : _instance.options.promptDlg.action.cancel );
+					}
 
 				}
 
-				ath_wrapper.classList.add( ...promptTarget.showClasses );
+				if ( this.options.autoHide && this.options.autoHide > 0 ) {
 
-				var ath_body = ath_wrapper.querySelector( _instance.options.promptDlg.body ),
-					ath_title = ath_wrapper.querySelector( _instance.options.promptDlg.title ),
-					ath_footer = ath_wrapper.querySelector( _instance.options.promptDlg.footer ),
-					ath_cancel = ath_wrapper.querySelector( _instance.options.promptDlg.cancel ),
-					ath_install = ath_wrapper.querySelector( _instance.options.promptDlg.install );
+					setTimeout( this.autoHide, this.options.autoHide * 1000 );
 
-				if ( ath_title ) {
-					ath_title.innerText = promptTarget.title;
 				}
-
-				ath_footer.classList.remove( _instance.options.hideClass );
-
-				ath_install.addEventListener( "click", platform.handleInstall );
-				ath_install.classList.remove( _instance.options.hideClass );
-				ath_install.innerText = ( promptTarget.action && promptTarget.action.ok ) ? promptTarget.action.ok : _instance.options.promptDlg.action.ok;
-
-				ath_cancel.addEventListener( "click", platform.closePrompt );
-				ath_cancel.classList.remove( _instance.options.hideClass );
-				ath_cancel.innerText = ( promptTarget.action && promptTarget.action.cancel ) ? promptTarget.action.cancel : _instance.options.promptDlg.action.cancel;
-
-			}
-
-			if ( this.options.autoHide && this.options.autoHide > 0 ) {
-
-				setTimeout( this.autoHide, this.options.autoHide * 1000 );
 
 			}
 
@@ -702,6 +746,12 @@
 			if ( this.options.onShow ) {
 				this.options.onShow.call( this );
 			}
+
+		},
+
+		trigger: function () {
+
+			this._show.bind( this );
 
 		},
 
