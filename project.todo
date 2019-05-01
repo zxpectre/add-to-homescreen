@@ -4,6 +4,9 @@ Prompt Script:
     ✔ display modal prompt to trigger native prompt @done (4/21/2019, 10:33:04 AM)
     ✔ display modal prompt to guide user to browser install button @done (4/21/2019, 10:33:37 AM)
     ☐ add external trigger method - must check if prompt can be displayed 1st
+    ✔ add custom criteria method @done (4/30/2019, 11:01:24 AM)
+    ✔ add app install custom method @done (4/30/2019, 10:45:39 AM)
+    ☐ change libary structure to expose main method and use local methods (my normal style)
 
 Prompt Management:
     ✔ Complete session (status) object definition @done (4/24/2019, 9:38:44 AM)
@@ -19,6 +22,8 @@ Prompt Displays:
     ✔ Opera Modal @done (4/24/2019, 9:38:35 AM)
     ✔ Edge modal @done (4/24/2019, 9:38:35 AM)
     ✔ updated banner layouts & CSS @done (4/25/2019, 12:31:44 PM)
+    ☐ Use mandatory to display a background layer to prevent other interactions until app is instlaled
+    ☐ reset autohide if platform guidance being displayed. Minium of 10 second display
 
 General Project:
     ☐ Read Manifest File @low

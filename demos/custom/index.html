@@ -27,17 +27,13 @@
 </head>
 
 <body>
-    <div class="container">
-        <br /><br /><br />
-        <p>Basic testing page.</p>
-        <div class="row d-flex mx-5 my-2 justify-content-end">
-            <button class="btn btn-primary btn-clear" onclick="clearToken">Clear Token</button>
-        </div>
-        <div class="row m-3">
-            <div class="log-target"></div>
-        </div>
-
-    </div>
+    <br /><br /><br />
+    <p>Uses a simple random number generator to determine if the prompt can be triggered.</p>
+    <p>This allows the site owner/manager to determine if there are application specific criteria that must be met
+        before the user can be prompted to add to homescreen. For example the user must be authenticated or meet a
+        certain score or threshold.</p>
+    <br /><br /><br />
+    <div class="log-target"></div>
     <div class="ath-container banner-bottom-center">
         <div class="ath-banner">
             <div class="ath-banner-cell">
@@ -60,9 +56,9 @@
     <script>
         var ath = addToHomescreen( {
             autostart: true,
-            lifespan: 5,
+            lifespan: 15,
             logging: true,
-            minSessions: 2,
+            minSessions: 0,
             onShow: function () {
                 console.log( "showing" );
             },
@@ -78,7 +74,11 @@
             onCancel: function () {
                 console.log( "Cancelling" );
             },
-            customCriteria: true,
+            customCriteria: function () {
+
+                return Math.floor( Math.random() * 5 ) > 3;
+
+            },
             displayPace: 10,
             customPrompt: {
                 title: "custom message",
@@ -87,12 +87,6 @@
                 installMsg: "do it"
             }
         } );
-
-        function clearToken() {
-
-            ath.clearSession(); // reset the user session
-
-        }
 
         if ( "serviceWorker" in navigator ) {
 

@@ -29,14 +29,13 @@
 <body>
     <div class="container">
         <br /><br /><br />
-        <p>Basic testing page.</p>
+        <p>Uses the debug option, set to 'opera', to help test the Opera Browser experience.</p>
         <div class="row d-flex mx-5 my-2 justify-content-end">
             <button class="btn btn-primary btn-clear" onclick="clearToken">Clear Token</button>
         </div>
         <div class="row m-3">
             <div class="log-target"></div>
         </div>
-
     </div>
     <div class="ath-container banner-bottom-center">
         <div class="ath-banner">
@@ -61,6 +60,7 @@
         var ath = addToHomescreen( {
             autostart: true,
             lifespan: 5,
+            debug: "opera",
             logging: true,
             minSessions: 2,
             onShow: function () {
