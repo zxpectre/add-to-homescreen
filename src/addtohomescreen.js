@@ -30,6 +30,10 @@
 
 		_instance.updateSession();
 
+		if ( this.options.onInstall ) {
+			this.options.onInstall.call( this );
+		}
+
 	} );
 
 	var platform = {},
@@ -45,7 +49,6 @@
 		// browser info and capability
 		var _ua = window.navigator.userAgent;
 
-		platform.inPrivate = !( "localStorage" in window );
 		platform.isIDevice = ( /iphone|ipod|ipad/i ).test( _ua );
 		platform.isSamsung = /Samsung/i.test( _ua );
 		platform.isFireFox = /Firefox/i.test( _ua );
@@ -71,6 +74,11 @@
 		platform.isCompatible = platform.isChromium || platform.isMobileSafari ||
 			platform.isSamsung || platform.isFireFox || platform.isOpera;
 
+		// console.log( "platform.isiPhone: ", platform.isiPhone );
+		// console.log( "platform.isMobileSafari: ", platform.isMobileSafari );
+		// console.log( "platform.isCompatible: ", platform.isCompatible );
+		// console.log( "platform.isInWebAppiOS: ", platform.isInWebAppiOS );
+
 	}
 
 	/* displays native A2HS prompt & stores results */
@@ -89,7 +97,17 @@
 
 				if ( session.added ) {
 					_instance.doLog( "User accepted the A2HS prompt" );
+
+					if ( _instance.options.onAdd ) {
+						_instance.options.onAdd();
+					}
+
 				} else {
+
+					if ( _instance.options.onCancel ) {
+						_instance.options.onCancel();
+					}
+
 					session.optedout = true;
 					_instance.doLog( "User dismissed the A2HS prompt" );
 				}
@@ -101,14 +119,22 @@
 			} )
 			.catch( function ( err ) {
 
-				_instance.doLog( err );
+				_instance.doLog( err.message );
 
-				showPlatformGuidance( true );
+				if ( err.message.indexOf( "user gesture" ) > -1 ) {
+					_instance.options.mustShowCustomPrompt = true;
+					_instance._delayedShow();
+				}
 
 			} );
 	}
 
 	function getPlatform( native ) {
+
+		if ( _instance.options.debug &&
+			typeof _instance.options.debug === "string" ) {
+			return _instance.options.debug;
+		}
 
 		if ( platform.isChromium && ( native === undefined && !native ) ) {
 			return "native";
@@ -132,6 +158,14 @@
 
 	}
 
+	function isVisble( ele ) {
+
+		var dimensions = ele.getBoundingClientRect();
+
+		return dimensions.width !== 0 && dimensions.height !== 0;
+
+	}
+
 	//show hint images for browsers without native prompt
 	/*
 		Currently: iOS Safari
@@ -145,6 +179,10 @@
 			ath_wrapper = document.querySelector( _instance.options.athWrapper );
 
 		if ( ath_wrapper ) {
+
+			if ( _instance.autoHideTimer ) {
+				clearTimeout( _instance.autoHideTimer );
+			}
 
 			if ( !skipNative && target === "native" && _beforeInstallPrompt ) {
 
@@ -183,6 +221,17 @@
 
 				}
 
+				if ( !isVisble( ath_wrapper ) ) {
+
+					ath_wrapper.classList.add( ...promptTarget.showClasses );
+					ath_wrapper.classList.remove( _instance.options.hideClass );
+
+				}
+
+				var hideAfter = ( _instance.options.lifespan >= 10 ) ? _instance.options.lifespan : 10;
+
+				_instance.autoHideTimer = setTimeout( _instance.autoHide, hideAfter * 1000 );
+
 			}
 
 		}
@@ -195,6 +244,11 @@
 		while ( true ) {
 
 			var isPrime = true;
+
+			if ( isNaN( value ) ) {
+				value = 0;
+			}
+
 			//increment the number by 1 each time
 			value += 1;
 
@@ -223,6 +277,7 @@
 
 	function ath( options ) {
 
+		//prevent duplicate instances
 		_instance = _instance || new ath.Class( options );
 
 		return _instance;
@@ -243,14 +298,16 @@
 		lifespan: 15, // life of the message in seconds
 		displayPace: 1440, // minutes before the message is shown again (0: display every time, default 24 hours)
 		displayNextPrime: false,
+		mustShowCustomPrompt: false,
 		maxDisplayCount: 0, // absolute maximum number of times the message will be shown to the user (0: no limit)
 		validLocation: [], // list of pages where the message will be shown (array of regexes)
 		onInit: null, // executed on instance creation
 		onShow: null, // executed when the message is shown
-		onRemove: null, // executed when the message is removed
 		onAdd: null, // when the application is launched the first time from the homescreen (guesstimate)
-		onPrivate: null, // executed if user is in private mode,
-		autoHide: 10,
+		onInstall: null,
+		onCancel: null,
+		customCriteria: null,
+		manualPrompt: null,
 		customPrompt: {}, //allow customization of prompt content
 		athWrapper: ".ath-container",
 		athGuidance: "ath-guidance",
@@ -395,6 +452,20 @@
 
 	};
 
+	platform.cancelPrompt = function ( evt ) {
+
+		evt.preventDefault();
+
+		if ( _instance.options.onCancel ) {
+			_instance.options.onCancel();
+		}
+
+		platform.closePrompt();
+
+		return false;
+
+	};
+
 	platform.closePrompt = function () {
 
 		var ath_wrapper = document.querySelector( _instance.options.athWrapper );
@@ -409,7 +480,12 @@
 
 	platform.handleInstall = function ( evt ) {
 
-		if ( _beforeInstallPrompt ) {
+		if ( _instance.options.onInstall ) {
+			_instance.options.onInstall();
+		}
+
+		if ( _beforeInstallPrompt &&
+			( !_instance.options.debug || getPlatform() === "native" ) ) {
 
 			platform.closePrompt();
 			triggerNativePrompt();
@@ -435,6 +511,8 @@
 		var manifestEle = document.querySelector( "[rel='manifest']" );
 
 		if ( !manifestEle ) {
+
+			//			console.log( "no manifest file" );
 			platform.isCompatible = false;
 		}
 
@@ -447,6 +525,8 @@
 		_instance.sw = sw;
 
 		if ( !_instance.sw ) {
+
+			//			console.log( "no service worker" );
 			platform.isCompatible = false;
 		}
 
@@ -462,6 +542,9 @@
 		_instance.options.mandatory = _instance.options.mandatory && ( 'standalone' in window.navigator ||
 			_instance.options.debug );
 
+		//this is forcing the user to add to homescreen before anything can be done
+		//the ideal scenario for this would be an enterprise business application
+		//could also be a part of an onboarding workflow for a SAAS
 		_instance.options.modal = _instance.options.modal || _instance.options.mandatory;
 
 		if ( _instance.options.mandatory ) {
@@ -483,11 +566,7 @@
 
 			_instance.doLog( "Add to homescreen: autostart displaying callout" );
 
-			if ( _instance.canPrompt() ) {
-
-				_instance.show();
-
-			}
+			_instance.show();
 
 		}
 
@@ -506,6 +585,25 @@
 
 			this._canPrompt = false;
 
+			if ( _instance.options.customCriteria !== null || _instance.options.customCriteria !== undefined ) {
+
+				var passCustom = false;
+
+				if ( typeof _instance.options.customCriteria === "function" ) {
+					passCustom = _instance.options.customCriteria();
+				} else {
+					passCustom = !!_instance.options.customCriteria;
+				}
+
+				if ( !passCustom ) {
+
+					this.doLog( "Add to homescreen: not displaying callout because a custom criteria was not met." );
+					return false;
+
+				}
+
+			}
+
 			//using a double negative here to detect if service workers are not supported
 			//if not then don't bother asking to add to install the PWA
 			if ( !( "serviceWorker" in navigator ) ) {
@@ -515,20 +613,10 @@
 
 			}
 
-			if ( platform.inPrivate ) {
-
-				this.doLog( "Add to homescreen: not displaying callout because using Private browsing" );
-				return false;
-			}
-
 			// the device is not supported
 			if ( !platform.isCompatible ) {
 				this.doLog( "Add to homescreen: not displaying callout because device not supported" );
 				return false;
-			}
-
-			if ( this.options.onPrivate ) {
-				this.options.onPrivate.call( this );
 			}
 
 			var now = Date.now(),
@@ -589,6 +677,7 @@
 			}
 
 			// check if the app is in stand alone mode
+			//this applies to iOS
 			if ( platform.isStandalone ) {
 
 				// execute the onAdd event if we haven't already
@@ -643,7 +732,7 @@
 
 			if ( _instance.options.displayNextPrime ) {
 
-				session.nextSession = nextPrime( session.session );
+				session.nextSession = nextPrime( session.sessions );
 
 			}
 
@@ -675,74 +764,78 @@
 
 		_show: function () {
 
-			if ( _beforeInstallPrompt ) {
+			if ( _instance.canPrompt() ) {
 
-				triggerNativePrompt();
+				if ( _beforeInstallPrompt && !_instance.options.mustShowCustomPrompt ) {
 
-			} else {
+					triggerNativePrompt();
 
-				var target = getPlatform(),
-					ath_wrapper = document.querySelector( _instance.options.athWrapper );
+				} else {
 
-				if ( ath_wrapper && !session.optedout ) {
+					var target = getPlatform(),
+						ath_wrapper = document.querySelector( _instance.options.athWrapper );
 
-					ath_wrapper.classList.remove( _instance.options.hideClass );
+					if ( ath_wrapper && !session.optedout ) {
 
-					var promptTarget = Object.assign( {}, defaultPrompt, _instance.options.customPrompt, _instance.options.prompt[ target ] );
+						ath_wrapper.classList.remove( _instance.options.hideClass );
 
-					if ( promptTarget.showClasses ) {
+						var promptTarget = Object.assign( {}, defaultPrompt, _instance.options.customPrompt, _instance.options.prompt[ target ] );
 
-						promptTarget.showClasses = promptTarget.showClasses.concat( _instance.options.showClasses );
+						if ( promptTarget.showClasses ) {
 
-					} else {
+							promptTarget.showClasses = promptTarget.showClasses.concat( _instance.options.showClasses );
 
-						promptTarget.showClasses = _instance.options.showClasses;
+						} else {
+
+							promptTarget.showClasses = _instance.options.showClasses;
+
+						}
+
+						ath_wrapper.classList.add( ...promptTarget.showClasses );
+
+						var ath_title = ath_wrapper.querySelector( _instance.options.promptDlg.title ),
+							ath_logo = ath_wrapper.querySelector( _instance.options.promptDlg.logo ),
+							ath_cancel = ath_wrapper.querySelector( _instance.options.promptDlg.cancel ),
+							ath_install = ath_wrapper.querySelector( _instance.options.promptDlg.install );
+
+						if ( ath_title && promptTarget.title ) {
+							ath_title.innerText = promptTarget.title;
+						}
+
+						if ( ath_logo && promptTarget.src ) {
+							ath_logo.src = promptTarget.src;
+							ath_logo.alt = promptTarget.title || "Install PWA";
+						}
+
+						if ( ath_install ) {
+							ath_install.addEventListener( "click", platform.handleInstall );
+							ath_install.classList.remove( _instance.options.hideClass );
+							ath_install.innerText = promptTarget.installMsg ? promptTarget.installMsg :
+								( ( promptTarget.action && promptTarget.action.ok ) ? promptTarget.action.ok : _instance.options.promptDlg.action.ok );
+						}
+
+						if ( ath_cancel ) {
+							ath_cancel.addEventListener( "click", platform.cancelPrompt );
+							ath_cancel.classList.remove( _instance.options.hideClass );
+							ath_cancel.innerText = promptTarget.cancelMsg ? promptTarget.cancelMsg :
+								( ( promptTarget.action && promptTarget.action.cancel ) ? promptTarget.action.cancel : _instance.options.promptDlg.action.cancel );
+						}
 
 					}
 
-					ath_wrapper.classList.add( ...promptTarget.showClasses );
+					if ( this.options.lifespan && this.options.lifespan > 0 ) {
 
-					var ath_title = ath_wrapper.querySelector( _instance.options.promptDlg.title ),
-						ath_logo = ath_wrapper.querySelector( _instance.options.promptDlg.logo ),
-						ath_cancel = ath_wrapper.querySelector( _instance.options.promptDlg.cancel ),
-						ath_install = ath_wrapper.querySelector( _instance.options.promptDlg.install );
+						_instance.autoHideTimer = setTimeout( this.autoHide, this.options.lifespan * 1000 );
 
-					if ( ath_title && promptTarget.title ) {
-						ath_title.innerText = promptTarget.title;
-					}
-
-					if ( ath_logo && promptTarget.src ) {
-						ath_logo.src = promptTarget.src;
-						ath_logo.alt = promptTarget.title || "Install PWA";
-					}
-
-					if ( ath_install ) {
-						ath_install.addEventListener( "click", platform.handleInstall );
-						ath_install.classList.remove( _instance.options.hideClass );
-						ath_install.innerText = promptTarget.installMsg ? promptTarget.installMsg :
-							( ( promptTarget.action && promptTarget.action.ok ) ? promptTarget.action.ok : _instance.options.promptDlg.action.ok );
-					}
-
-					if ( ath_cancel ) {
-						ath_cancel.addEventListener( "click", platform.closePrompt );
-						ath_cancel.classList.remove( _instance.options.hideClass );
-						ath_cancel.innerText = promptTarget.cancelMsg ? promptTarget.cancelMsg :
-							( ( promptTarget.action && promptTarget.action.cancel ) ? promptTarget.action.cancel : _instance.options.promptDlg.action.cancel );
 					}
 
 				}
 
-				if ( this.options.autoHide && this.options.autoHide > 0 ) {
-
-					setTimeout( this.autoHide, this.options.autoHide * 1000 );
-
+				// fire the custom onShow event
+				if ( this.options.onShow ) {
+					this.options.onShow.call( this );
 				}
 
-			}
-
-			// fire the custom onShow event
-			if ( this.options.onShow ) {
-				this.options.onShow.call( this );
 			}
 
 		},

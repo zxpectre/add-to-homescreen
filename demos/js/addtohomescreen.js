@@ -74,6 +74,11 @@
 		platform.isCompatible = platform.isChromium || platform.isMobileSafari ||
 			platform.isSamsung || platform.isFireFox || platform.isOpera;
 
+		// console.log( "platform.isiPhone: ", platform.isiPhone );
+		// console.log( "platform.isMobileSafari: ", platform.isMobileSafari );
+		// console.log( "platform.isCompatible: ", platform.isCompatible );
+		// console.log( "platform.isInWebAppiOS: ", platform.isInWebAppiOS );
+
 	}
 
 	/* displays native A2HS prompt & stores results */
@@ -239,6 +244,11 @@
 		while ( true ) {
 
 			var isPrime = true;
+
+			if ( isNaN( value ) ) {
+				value = 0;
+			}
+
 			//increment the number by 1 each time
 			value += 1;
 
@@ -474,7 +484,8 @@
 			_instance.options.onInstall();
 		}
 
-		if ( _beforeInstallPrompt ) {
+		if ( _beforeInstallPrompt &&
+			( !_instance.options.debug || getPlatform() === "native" ) ) {
 
 			platform.closePrompt();
 			triggerNativePrompt();
@@ -500,6 +511,8 @@
 		var manifestEle = document.querySelector( "[rel='manifest']" );
 
 		if ( !manifestEle ) {
+
+			//			console.log( "no manifest file" );
 			platform.isCompatible = false;
 		}
 
@@ -512,6 +525,8 @@
 		_instance.sw = sw;
 
 		if ( !_instance.sw ) {
+
+			//			console.log( "no service worker" );
 			platform.isCompatible = false;
 		}
 
@@ -583,10 +598,10 @@
 				if ( !passCustom ) {
 
 					this.doLog( "Add to homescreen: not displaying callout because a custom criteria was not met." );
+					return false;
 
 				}
 
-				return passCustom;
 			}
 
 			//using a double negative here to detect if service workers are not supported
@@ -703,45 +718,41 @@
 
 		show: function ( force ) {
 
-			if ( _instance.canPrompt() ) {
+			// message already on screen
+			if ( this.shown ) {
+				this.doLog( "Add to homescreen: not displaying callout because already shown on screen" );
+				return;
+			}
 
-				// message already on screen
-				if ( this.shown ) {
-					this.doLog( "Add to homescreen: not displaying callout because already shown on screen" );
-					return;
-				}
+			this.shown = true;
 
-				this.shown = true;
+			// increment the display count
+			session.lastDisplayTime = Date.now();
+			session.displayCount++;
 
-				// increment the display count
-				session.lastDisplayTime = Date.now();
-				session.displayCount++;
+			if ( _instance.options.displayNextPrime ) {
 
-				if ( _instance.options.displayNextPrime ) {
+				session.nextSession = nextPrime( session.sessions );
 
-					session.nextSession = nextPrime( session.session );
+			}
 
-				}
+			this.updateSession();
 
-				this.updateSession();
+			if ( document.readyState === "interactive" || document.readyState === "complete" ) {
 
-				if ( document.readyState === "interactive" || document.readyState === "complete" ) {
+				this._delayedShow();
 
-					this._delayedShow();
+			} else {
 
-				} else {
+				document.onreadystatechange = function () {
 
-					document.onreadystatechange = function () {
+					if ( document.readyState === 'complete' ) {
 
-						if ( document.readyState === 'complete' ) {
+						this._delayedShow();
 
-							this._delayedShow();
+					}
 
-						}
-
-					};
-
-				}
+				};
 
 			}
 
@@ -753,74 +764,78 @@
 
 		_show: function () {
 
-			if ( _beforeInstallPrompt && !_instance.options.mustShowCustomPrompt ) {
+			if ( _instance.canPrompt() ) {
 
-				triggerNativePrompt();
+				if ( _beforeInstallPrompt && !_instance.options.mustShowCustomPrompt ) {
 
-			} else {
+					triggerNativePrompt();
 
-				var target = getPlatform(),
-					ath_wrapper = document.querySelector( _instance.options.athWrapper );
+				} else {
 
-				if ( ath_wrapper && !session.optedout ) {
+					var target = getPlatform(),
+						ath_wrapper = document.querySelector( _instance.options.athWrapper );
 
-					ath_wrapper.classList.remove( _instance.options.hideClass );
+					if ( ath_wrapper && !session.optedout ) {
 
-					var promptTarget = Object.assign( {}, defaultPrompt, _instance.options.customPrompt, _instance.options.prompt[ target ] );
+						ath_wrapper.classList.remove( _instance.options.hideClass );
 
-					if ( promptTarget.showClasses ) {
+						var promptTarget = Object.assign( {}, defaultPrompt, _instance.options.customPrompt, _instance.options.prompt[ target ] );
 
-						promptTarget.showClasses = promptTarget.showClasses.concat( _instance.options.showClasses );
+						if ( promptTarget.showClasses ) {
 
-					} else {
+							promptTarget.showClasses = promptTarget.showClasses.concat( _instance.options.showClasses );
 
-						promptTarget.showClasses = _instance.options.showClasses;
+						} else {
+
+							promptTarget.showClasses = _instance.options.showClasses;
+
+						}
+
+						ath_wrapper.classList.add( ...promptTarget.showClasses );
+
+						var ath_title = ath_wrapper.querySelector( _instance.options.promptDlg.title ),
+							ath_logo = ath_wrapper.querySelector( _instance.options.promptDlg.logo ),
+							ath_cancel = ath_wrapper.querySelector( _instance.options.promptDlg.cancel ),
+							ath_install = ath_wrapper.querySelector( _instance.options.promptDlg.install );
+
+						if ( ath_title && promptTarget.title ) {
+							ath_title.innerText = promptTarget.title;
+						}
+
+						if ( ath_logo && promptTarget.src ) {
+							ath_logo.src = promptTarget.src;
+							ath_logo.alt = promptTarget.title || "Install PWA";
+						}
+
+						if ( ath_install ) {
+							ath_install.addEventListener( "click", platform.handleInstall );
+							ath_install.classList.remove( _instance.options.hideClass );
+							ath_install.innerText = promptTarget.installMsg ? promptTarget.installMsg :
+								( ( promptTarget.action && promptTarget.action.ok ) ? promptTarget.action.ok : _instance.options.promptDlg.action.ok );
+						}
+
+						if ( ath_cancel ) {
+							ath_cancel.addEventListener( "click", platform.cancelPrompt );
+							ath_cancel.classList.remove( _instance.options.hideClass );
+							ath_cancel.innerText = promptTarget.cancelMsg ? promptTarget.cancelMsg :
+								( ( promptTarget.action && promptTarget.action.cancel ) ? promptTarget.action.cancel : _instance.options.promptDlg.action.cancel );
+						}
 
 					}
 
-					ath_wrapper.classList.add( ...promptTarget.showClasses );
+					if ( this.options.lifespan && this.options.lifespan > 0 ) {
 
-					var ath_title = ath_wrapper.querySelector( _instance.options.promptDlg.title ),
-						ath_logo = ath_wrapper.querySelector( _instance.options.promptDlg.logo ),
-						ath_cancel = ath_wrapper.querySelector( _instance.options.promptDlg.cancel ),
-						ath_install = ath_wrapper.querySelector( _instance.options.promptDlg.install );
+						_instance.autoHideTimer = setTimeout( this.autoHide, this.options.lifespan * 1000 );
 
-					if ( ath_title && promptTarget.title ) {
-						ath_title.innerText = promptTarget.title;
-					}
-
-					if ( ath_logo && promptTarget.src ) {
-						ath_logo.src = promptTarget.src;
-						ath_logo.alt = promptTarget.title || "Install PWA";
-					}
-
-					if ( ath_install ) {
-						ath_install.addEventListener( "click", platform.handleInstall );
-						ath_install.classList.remove( _instance.options.hideClass );
-						ath_install.innerText = promptTarget.installMsg ? promptTarget.installMsg :
-							( ( promptTarget.action && promptTarget.action.ok ) ? promptTarget.action.ok : _instance.options.promptDlg.action.ok );
-					}
-
-					if ( ath_cancel ) {
-						ath_cancel.addEventListener( "click", platform.cancelPrompt );
-						ath_cancel.classList.remove( _instance.options.hideClass );
-						ath_cancel.innerText = promptTarget.cancelMsg ? promptTarget.cancelMsg :
-							( ( promptTarget.action && promptTarget.action.cancel ) ? promptTarget.action.cancel : _instance.options.promptDlg.action.cancel );
 					}
 
 				}
 
-				if ( this.options.lifespan && this.options.lifespan > 0 ) {
-
-					_instance.autoHideTimer = setTimeout( this.autoHide, this.options.lifespan * 1000 );
-
+				// fire the custom onShow event
+				if ( this.options.onShow ) {
+					this.options.onShow.call( this );
 				}
 
-			}
-
-			// fire the custom onShow event
-			if ( this.options.onShow ) {
-				this.options.onShow.call( this );
 			}
 
 		},
