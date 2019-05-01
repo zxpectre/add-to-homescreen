@@ -4,17 +4,26 @@
 <head>
     <meta charset="utf-8">
     <title>Add To Home</title>
+    <base href="/">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
 
     <meta name="apple-mobile-web-app-title" content="Add to Home">
-    <link rel="shortcut icon" sizes="16x16" href="../../imgs/icon-16x16.png">
-    <link rel="shortcut icon" sizes="196x196" href="../../imgs/icon-196x196.png">
-    <link rel="apple-touch-icon-precomposed" href="../../imgs/icon-152x152.png">
 
-    <link rel="stylesheet" type="text/css" href="../../style/addtohomescreen.css">
+    <link rel="shortcut icon" sizes="16x16" href="imgs/icon-16x16.png">
+    <link rel="shortcut icon" sizes="196x196" href="imgs/icon-196x196.png">
+    <link rel="apple-touch-icon-precomposed" href="imgs/icon-152x152.png">
+
+    <link rel="stylesheet" type="text/css" href="style/bootstrap.min.css">
+
+    <link rel="stylesheet" type="text/css" href="style/addtohomescreen.css">
+    <link rel="stylesheet" type="text/css" href="style/animate.css">
+
+    <meta name="theme-color" content="#fff">
+    <link href="manifest.json" rel="manifest">
+
 </head>
 
 <body>
@@ -22,7 +31,7 @@
         <br /><br /><br />
         <p>General debug testing</p>
         <div class="row d-flex mx-5 my-2 justify-content-end">
-            <button class="btn btn-primary btn-clear" onclick="clearToken">Clear Token</button>
+            <button class="btn btn-primary btn-clear" onClick="clearToken();">Clear Token</button>
         </div>
 
         <div class="row m-3">

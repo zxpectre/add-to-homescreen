@@ -551,11 +551,7 @@
 
 			_instance.doLog( "Add to homescreen: autostart displaying callout" );
 
-			if ( _instance.canPrompt() ) {
-
-				_instance.show();
-
-			}
+			_instance.show();
 
 		}
 
@@ -707,41 +703,45 @@
 
 		show: function ( force ) {
 
-			// message already on screen
-			if ( this.shown ) {
-				this.doLog( "Add to homescreen: not displaying callout because already shown on screen" );
-				return;
-			}
+			if ( _instance.canPrompt() ) {
 
-			this.shown = true;
+				// message already on screen
+				if ( this.shown ) {
+					this.doLog( "Add to homescreen: not displaying callout because already shown on screen" );
+					return;
+				}
 
-			// increment the display count
-			session.lastDisplayTime = Date.now();
-			session.displayCount++;
+				this.shown = true;
 
-			if ( _instance.options.displayNextPrime ) {
+				// increment the display count
+				session.lastDisplayTime = Date.now();
+				session.displayCount++;
 
-				session.nextSession = nextPrime( session.session );
+				if ( _instance.options.displayNextPrime ) {
 
-			}
+					session.nextSession = nextPrime( session.session );
 
-			this.updateSession();
+				}
 
-			if ( document.readyState === "interactive" || document.readyState === "complete" ) {
+				this.updateSession();
 
-				this._delayedShow();
+				if ( document.readyState === "interactive" || document.readyState === "complete" ) {
 
-			} else {
+					this._delayedShow();
 
-				document.onreadystatechange = function () {
+				} else {
 
-					if ( document.readyState === 'complete' ) {
+					document.onreadystatechange = function () {
 
-						this._delayedShow();
+						if ( document.readyState === 'complete' ) {
 
-					}
+							this._delayedShow();
 
-				};
+						}
+
+					};
+
+				}
 
 			}
 

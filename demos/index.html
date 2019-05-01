@@ -73,7 +73,7 @@
                     <p class="card-text">Sets the customCriteria property to demonstrate how you can control if a prompt
                         can
                         be displayed using a custom function or simply passing true or false.</p>
-                    <a href="trigger/" class="card-link">Try it Out</a>
+                    <a href="custom/" class="card-link">Try it Out</a>
                 </div>
             </div>
             <div class="card col-sm-12 col-md-6 col-lg-4 col-xl-3">
@@ -125,7 +125,7 @@
                 </div>
             </div>
             <div class="row d-flex mx-5 my-2 justify-content-end">
-                <button class="btn btn-primary btn-clear" onclick="clearToken">Clear Token</button>
+                <button class="btn btn-primary btn-clear" onClick="clearToken();">Clear Token</button>
             </div>
             <div class="row m-3">
                 <div class="log-target"></div>
@@ -173,6 +173,7 @@
             onCancel: function () {
                 console.log( "Cancelling" );
             },
+            nextPrime: true,
             customCriteria: true,
             displayPace: 10,
             customPrompt: {
