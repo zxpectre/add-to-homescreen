@@ -19,22 +19,30 @@
 		return;
 	}
 
-	window.addEventListener( "beforeinstallprompt", beforeInstallPrompt );
+	if ( window.onbeforeinstallprompt ) {
 
-	window.addEventListener( "appinstalled", function ( evt ) {
+		window.addEventListener( "beforeinstallprompt", beforeInstallPrompt );
 
-		// TODO: update session object to reflect the PWA has been installed
-		_instance.doLog( "a2hs", "installed" );
+	}
 
-		session.added = true;
+	if ( window.onappinstalled ) {
 
-		_instance.updateSession();
+		window.addEventListener( "appinstalled", function ( evt ) {
 
-		if ( this.options.onInstall ) {
-			this.options.onInstall.call( this );
-		}
+			// TODO: update session object to reflect the PWA has been installed
+			_instance.doLog( "a2hs", "installed" );
 
-	} );
+			session.added = true;
+
+			_instance.updateSession();
+
+			if ( this.options.onInstall ) {
+				this.options.onInstall.call( this );
+			}
+
+		} );
+
+	}
 
 	var platform = {},
 		defaultPrompt = {
@@ -124,6 +132,11 @@
 				if ( err.message.indexOf( "user gesture" ) > -1 ) {
 					_instance.options.mustShowCustomPrompt = true;
 					_instance._delayedShow();
+				} else if ( err.message.indexOf( "The app is already installed" ) > -1 ) {
+
+					session.added = true;
+					_instance.updateSession();
+
 				}
 
 			} );
@@ -193,44 +206,52 @@
 
 				var promptTarget = Object.assign( {}, defaultPrompt, _instance.options.customPrompt, _instance.options.prompt[ target ] );
 
-				var ath_body = ath_wrapper.querySelector( _instance.options.promptDlg.body );
+				if ( promptTarget.targetUrl ) {
 
-				if ( promptTarget.imgs && promptTarget.imgs.length > 0 ) {
+					location.replace( promptTarget.targetUrl );
 
-					ath_body.innerHTML = "";
-					ath_body.classList.add( _instance.options.athGuidance );
+				} else {
 
-					for ( var index = 0; index < promptTarget.imgs.length; index++ ) {
+					var ath_body = ath_wrapper.querySelector( _instance.options.promptDlg.body );
 
-						var img = new Image();
+					if ( promptTarget.imgs && promptTarget.imgs.length > 0 ) {
 
-						img.src = promptTarget.imgs[ index ].src;
-						img.alt = promptTarget.imgs[ index ].alt;
+						ath_body.innerHTML = "";
+						ath_body.classList.add( _instance.options.athGuidance );
 
-						if ( promptTarget.imgs[ index ].classes ) {
+						for ( var index = 0; index < promptTarget.imgs.length; index++ ) {
 
-							img.classList.add( ...promptTarget.imgs[ index ].classes );
+							var img = new Image();
+
+							img.src = promptTarget.imgs[ index ].src;
+							img.alt = promptTarget.imgs[ index ].alt;
+
+							if ( promptTarget.imgs[ index ].classes ) {
+
+								img.classList.add( ...promptTarget.imgs[ index ].classes );
+
+							}
+
+							img.classList.add( _instance.options.showClass );
+
+							ath_body.appendChild( img );
 
 						}
 
-						img.classList.add( _instance.options.showClass );
+					}
 
-						ath_body.appendChild( img );
+					if ( !isVisble( ath_wrapper ) ) {
+
+						ath_wrapper.classList.add( ...promptTarget.showClasses );
+						ath_wrapper.classList.remove( _instance.options.hideClass );
 
 					}
 
-				}
+					var hideAfter = ( _instance.options.lifespan >= 10 ) ? _instance.options.lifespan : 10;
 
-				if ( !isVisble( ath_wrapper ) ) {
-
-					ath_wrapper.classList.add( ...promptTarget.showClasses );
-					ath_wrapper.classList.remove( _instance.options.hideClass );
+					_instance.autoHideTimer = setTimeout( _instance.autoHide, hideAfter * 1000 );
 
 				}
-
-				var hideAfter = ( _instance.options.lifespan >= 10 ) ? _instance.options.lifespan : 10;
-
-				_instance.autoHideTimer = setTimeout( _instance.autoHide, hideAfter * 1000 );
 
 			}
 
@@ -327,6 +348,7 @@
 		},
 		prompt: {
 			"native": {
+				targetUrl: undefined,
 				showClasses: [ "fadeInUp", "right-banner" ],
 				action: {
 					"ok": "Install",
@@ -334,6 +356,7 @@
 				}
 			},
 			"edge": {
+				targetUrl: undefined,
 				showClasses: [ "edge-wrapper",
 					"animated", "fadeIn", "d-block", "right-banner"
 				],
@@ -343,6 +366,7 @@
 				} ]
 			},
 			"chromium": {
+				targetUrl: undefined,
 				showClasses: [ "chromium-wrapper",
 					"animated", "fadeIn", "d-block", "right-banner"
 				],
@@ -352,9 +376,8 @@
 				} ]
 			},
 			"iphone": {
-				showClasses: [ "iphone-wrapper",
-					"animated", "fadeIn", "d-block"
-				],
+				targetUrl: undefined,
+				showClasses: [ "iphone-wrapper", "animated", "fadeIn", "d-block" ],
 				imgs: [ {
 						src: "imgs/ios-safari-share-button-highlight.jpg",
 						alt: "Tap the Share Icon"
@@ -376,6 +399,7 @@
 				]
 			},
 			"ipad": {
+				targetUrl: undefined,
 				showClasses: [ "ipad-wrapper", "animated", "fadeInUp", "d-block" ],
 				imgs: [ {
 					src: "imgs/safari-ipad-share-a2hs-right.jpg",
@@ -383,6 +407,7 @@
 				} ]
 			},
 			"firefox": {
+				targetUrl: undefined,
 				showClasses: [ "firefox-wrapper",
 					"animated", "fadeIn", "d-block"
 				],
@@ -392,6 +417,7 @@
 				} ]
 			},
 			"samsung": {
+				targetUrl: undefined,
 				showClasses: [ "samsung-wrapper",
 					"animated", "fadeIn", "d-block"
 				],
@@ -401,6 +427,7 @@
 				} ]
 			},
 			"opera": {
+				targetUrl: undefined,
 				showClasses: [ "opera-home-screen-wrapper",
 					"animated", "fadeIn", "d-block"
 				],
@@ -508,17 +535,43 @@
 		// merge default options with user config
 		this.options = Object.assign( {}, ath.defaults, options );
 
-		var manifestEle = document.querySelector( "[rel='manifest']" );
+		if ( "serviceWorker" in navigator ) {
 
-		if ( !manifestEle ) {
+			var manifestEle = document.querySelector( "[rel='manifest']" );
 
-			//			console.log( "no manifest file" );
-			platform.isCompatible = false;
+			if ( !manifestEle ) {
+
+				//			console.log( "no manifest file" );
+				platform.isCompatible = false;
+			}
+
+			navigator.serviceWorker.getRegistration().then( afterSWCheck );
+
+			buildGuidanceURLs( this.options.prompt );
+
 		}
 
-		navigator.serviceWorker.getRegistration().then( afterSWCheck );
-
 	};
+
+	var guideanceTagetURLs = [];
+
+	function buildGuidanceURLs( prompts ) {
+
+		for ( var key in prompts ) {
+
+			if ( prompts.hasOwnProperty( key ) ) {
+
+				var target = prompts[ key ].targetUrl;
+
+				if ( target ) {
+					guideanceTagetURLs.push( target );
+				}
+
+			}
+
+		}
+
+	}
 
 	function afterSWCheck( sw ) {
 
@@ -654,6 +707,22 @@
 				return false;
 			}
 
+			var isGuidanceURL = false;
+
+			for ( i = guideanceTagetURLs.length; i--; ) {
+
+				if ( document.location.href.indexOf( guideanceTagetURLs[ i ] ) > -1 ) {
+					isGuidanceURL = true;
+					break;
+				}
+
+			}
+
+			if ( isGuidanceURL ) {
+				this.doLog( "Add to homescreen: not displaying callout because this is a guidance URL" );
+				return false;
+			}
+
 			if ( session.sessions < this.options.minSessions ) {
 				this.doLog( "Add to homescreen: not displaying callout because not enough visits" );
 				return false;
@@ -736,11 +805,11 @@
 
 			}
 
-			this.updateSession();
+			_instance.updateSession();
 
 			if ( document.readyState === "interactive" || document.readyState === "complete" ) {
 
-				this._delayedShow();
+				_instance._delayedShow();
 
 			} else {
 
@@ -748,7 +817,7 @@
 
 					if ( document.readyState === 'complete' ) {
 
-						this._delayedShow();
+						_instance._delayedShow();
 
 					}
 
