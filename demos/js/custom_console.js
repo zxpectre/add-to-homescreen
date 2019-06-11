@@ -72,6 +72,7 @@ function stack_trace_format( stackTrace ) {
     var console = window.console;
 
     if ( !console ) {
+        alert( "console not supported :(" );
         return;
     }
 

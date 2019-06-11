@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Add To Home</title>
+    <title>Install Progressive Web App - Inline Content Demonstration</title>
     <base href="/">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -17,6 +17,7 @@
     <link rel="apple-touch-icon-precomposed" href="imgs/icon-152x152.png">
 
     <link rel="stylesheet" type="text/css" href="style/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="style/all.min.css">
 
     <link rel="stylesheet" type="text/css" href="style/addtohomescreen.css">
     <link rel="stylesheet" type="text/css" href="style/animate.css">
@@ -27,43 +28,43 @@
 </head>
 
 <body>
-    <section class="container">
+    <div class="container">
         <br /><br /><br />
-        <p>Uses a simple random number generator to determine if the prompt can be triggered.</p>
-        <p>This allows the site owner/manager to determine if there are application specific criteria that must be
-            met
-            before the user can be prompted to add to homescreen. For example the user must be authenticated or meet
-            a
-            certain score or threshold.</p>
-        <br /><br /><br />
-        <div class="log-target"></div>
-    </section>
-    <div class="ath-container banner-bottom-center">
-        <div class="ath-banner">
-            <div class="ath-banner-cell">
-                <img src="imgs/pwa-logo-50x50.png" alt="PWA" class="ath-prompt-logo">
+        <p>Inline testing page. v0.0.1</p>
+        <div class="ath-container banner-bottom-center">
+            <button class="btn btn-cancel btn-link"><i class="fas fa-times fa-xs"></i></button>
+            <div class="ath-banner">
+                <div class="ath-banner-cell">
+                    <img src="imgs/pwa-logo-50x50.png" alt="PWA" class="ath-prompt-logo">
+                </div>
+                <div class="ath-banner-title">
+                    <p>Install this PWA?</p>
+                </div>
+                <div class="ath-banner-cell">
+                    <button class="btn btn-install btn-success">Install</button>
+                </div>
             </div>
-            <div class="ath-banner-title">
-                <p>Install this PWA?</p>
-            </div>
-            <div class="ath-banner-cell">
-                <button class="btn btn-cancel btn-link">Not Now</button>
-            </div>
-            <div class="ath-banner-cell">
-                <button class="btn btn-install btn-success">Install</button>
-            </div>
-
         </div>
-    </div>
-    <script src="js/custom_console.js"></script>
 
+
+        <div class="row d-flex mx-5 my-2 justify-content-end">
+            <button class="btn btn-primary btn-clear" onClick="clearToken();">Clear Token</button>
+        </div>
+        <div class="row m-3">
+            <div class="log-target"></div>
+        </div>
+
+    </div>
+
+    <script src="js/custom_console.js"></script>
     <script src="js/addtohomescreen.js"></script>
     <script>
         var ath = addToHomescreen( {
             autostart: true,
-            lifespan: 15,
+            lifespan: 5,
             logging: true,
-            minSessions: 0,
+            minSessions: 2,
+            displayPace: 0,
             onShow: function () {
                 console.log( "showing" );
             },
@@ -79,19 +80,28 @@
             onCancel: function () {
                 console.log( "Cancelling" );
             },
-            customCriteria: function () {
-
-                return Math.floor( Math.random() * 5 ) > 3;
-
-            },
-            displayPace: 0,
+            customCriteria: true,
             customPrompt: {
                 title: "custom message",
                 src: "https://love2dev.com/meta/android/android-launchericon-48-48.png",
-                cancelMsg: "go away",
+                cancelMsg: null,
                 installMsg: "do it"
             }
         } );
+
+        var target = document.querySelector( ".log-target" );
+
+        if ( target ) {
+            target.innerText += "\r\nstandalone: " + window.navigator.standalone;
+        }
+
+        function clearToken() {
+
+            alert( "clearing session data" );
+
+            ath.clearSession(); // reset the user session
+
+        }
 
         if ( "serviceWorker" in navigator ) {
 

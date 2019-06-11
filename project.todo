@@ -26,6 +26,8 @@ Prompt Displays:
     ☐ Use mandatory to display a background layer to prevent other interactions until app is instlaled
     ✔ reset autohide if platform guidance being displayed. Minium of 10 second display @done (5/1/2019, 1:40:33 PM)
     ☐ supress for Opera Desktop
+    ☐ change to trigger custom method instead of banner
+        - this could be to change the CSS on a menu item or inline promos in articles for example
 
 General Project:
     ✔ Read Manifest File @low @done (5/27/2019, 4:21:30 PM) - completed in pwa wizard

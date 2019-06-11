@@ -124,6 +124,13 @@
                     <a href="ipad/" class="card-link">Try it Out</a>
                 </div>
             </div>
+            <div class="card col-sm-12 col-md-6 col-lg-4 col-xl-3">
+                <div class="card-body">
+                    <h5 class="card-title">Inline</h5>
+                    <p class="card-text">Display an inline promotion.</p>
+                    <a href="inline/" class="card-link">Try it Out</a>
+                </div>
+            </div>
             <div class="row m-3 col-12">
                 <div class="log-target"></div>
             </div>
@@ -182,17 +189,14 @@
                 src: "https://love2dev.com/meta/android/android-launchericon-48-48.png",
                 cancelMsg: "go away",
                 installMsg: "do it"
-            }
+            },
+            debug: true
         } );
 
-        if ( window.navigator.standalone ) {
+        var target = document.querySelector( ".log-target" );
 
-            var target = document.querySelector( ".log-target" );
-
-            if ( target ) {
-                target.innerText += "\r\nstandalone: " + window.navigator.standalone;
-            }
-
+        if ( target ) {
+            target.innerText += "\r\nstandalone: " + window.navigator.standalone;
         }
 
         function clearToken() {

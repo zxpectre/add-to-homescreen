@@ -56,6 +56,7 @@
         </div>
     </div>
 
+    <script src="js/custom_console.js"></script>
     <script src="js/addtohomescreen.js"></script>
     <script>
         var ath = addToHomescreen( {
@@ -87,6 +88,12 @@
                 installMsg: "do it"
             }
         } );
+
+        var target = document.querySelector( ".log-target" );
+
+        if ( target ) {
+            target.innerText += "\r\nstandalone: " + window.navigator.standalone;
+        }
 
         function clearToken() {
 
