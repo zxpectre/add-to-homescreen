@@ -33,7 +33,15 @@
 </head>
 
 <body>
-    <div class="log-target"></div>
+
+    <section class="container my-5 py-3">
+        <div class="row">
+            <h1>Using a Custom Trigger to control if the Add to Homescreen Banner can be displayed</h1>
+        </div>
+        <div class="row">
+            <div class="log-target"></div>
+        </div>
+    </section>
     <div class="ath-container banner-bottom-center">
         <div class="ath-banner">
             <div class="ath-banner-cell">
@@ -52,10 +60,11 @@
         </div>
     </div>
 
+    <script src="js/custom_console.js"></script>
     <script src="js/addtohomescreen.js"></script>
     <script>
         var ath = addToHomescreen( {
-            autostart: false,
+            autostart: true,
             autoHide: 0,
             logging: true,
             minSessions: 2,
@@ -75,7 +84,7 @@
                 console.log( "Cancelling" );
             },
             customCriteria: true,
-            displayPace: 10,
+            displayPace: 1,
             customPrompt: {
                 title: "custom message",
                 src: "https://love2dev.com/meta/android/android-launchericon-48-48.png",

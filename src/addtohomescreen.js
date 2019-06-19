@@ -2,6 +2,9 @@
 
 
 ( function ( window, document, undefined ) {
+
+	"use strict";
+
 	/*
 	       _   _ _____     _____
 	 ___ _| |_| |_   _|___|  |  |___ _____ ___ ___ ___ ___ ___ ___ ___
@@ -19,13 +22,13 @@
 		return;
 	}
 
-	if ( window.onbeforeinstallprompt ) {
+	if ( "onbeforeinstallprompt" in window ) {
 
 		window.addEventListener( "beforeinstallprompt", beforeInstallPrompt );
 
 	}
 
-	if ( window.onappinstalled ) {
+	if ( "onappinstalled" in window ) {
 
 		window.addEventListener( "appinstalled", function ( evt ) {
 
@@ -79,13 +82,18 @@
 		platform.isStandalone = platform.isInWebAppiOS || platform.isInWebAppChrome;
 		platform.isiPad = ( platform.isMobileSafari && _ua.indexOf( 'iPad' ) > -1 );
 		platform.isiPhone = ( platform.isMobileSafari && _ua.indexOf( 'iPad' ) === -1 );
-		platform.isCompatible = platform.isChromium || platform.isMobileSafari ||
-			platform.isSamsung || platform.isFireFox || platform.isOpera;
+		platform.isCompatible = ( platform.isChromium || platform.isMobileSafari ||
+			platform.isSamsung || platform.isFireFox || platform.isOpera );
 
-		// console.log( "platform.isiPhone: ", platform.isiPhone );
-		// console.log( "platform.isMobileSafari: ", platform.isMobileSafari );
-		// console.log( "platform.isCompatible: ", platform.isCompatible );
-		// console.log( "platform.isInWebAppiOS: ", platform.isInWebAppiOS );
+		var foo = true,
+			bar = false;
+
+		console.log( "foo bar: ", foo || bar );
+
+		console.log( "platform.isiPhone: " + platform.isiPhone );
+		console.log( "platform.isMobileSafari: " + platform.isMobileSafari );
+		console.log( "platform.isInWebAppiOS: " + platform.isInWebAppiOS );
+		console.log( "platform.isCompatible: " + platform.isCompatible );
 
 	}
 
@@ -144,6 +152,8 @@
 
 	function getPlatform( native ) {
 
+		console.log( "getting platform " );
+
 		if ( _instance.options.debug &&
 			typeof _instance.options.debug === "string" ) {
 			return _instance.options.debug;
@@ -168,6 +178,8 @@
 		} else {
 			return "";
 		}
+
+		console.log( "got platform " );
 
 	}
 
@@ -299,9 +311,12 @@
 	function ath( options ) {
 
 		//prevent duplicate instances
-		_instance = _instance || new ath.Class( options );
+		if ( !_instance ) {
+			_instance || new ath.Class( options );
+		}
 
 		return _instance;
+
 	}
 
 	// default options
@@ -459,6 +474,8 @@
 
 		evt.preventDefault();
 
+		console.log( "capturing the native A2HS prompt" );
+
 		_beforeInstallPrompt = evt;
 
 	}
@@ -474,7 +491,6 @@
 		if ( this.options.logging ) {
 
 			console.log( logStr );
-
 		}
 
 	};
@@ -535,13 +551,15 @@
 		// merge default options with user config
 		this.options = Object.assign( {}, ath.defaults, options );
 
+		_instance = this;
+
 		if ( "serviceWorker" in navigator ) {
 
 			var manifestEle = document.querySelector( "[rel='manifest']" );
 
 			if ( !manifestEle ) {
 
-				//			console.log( "no manifest file" );
+				console.log( "no manifest file" );
 				platform.isCompatible = false;
 			}
 
@@ -549,6 +567,8 @@
 
 			buildGuidanceURLs( this.options.prompt );
 
+		} else {
+			afterSWCheck( {} );
 		}
 
 	};
@@ -579,7 +599,7 @@
 
 		if ( !_instance.sw ) {
 
-			//			console.log( "no service worker" );
+			console.log( "no service worker" );
 			platform.isCompatible = false;
 		}
 
@@ -630,6 +650,8 @@
 		_canPrompt: undefined,
 
 		canPrompt: function () {
+
+			this.doLog( "start canPrompt ", this );
 
 			//already evaluated the situation, so don't do it again
 			if ( this._canPrompt !== undefined ) {
@@ -781,6 +803,8 @@
 
 			this._canPrompt = true;
 
+			console.log( "end canPrompt" );
+
 			return true;
 
 		},
@@ -788,35 +812,20 @@
 		show: function ( force ) {
 
 			// message already on screen
-			if ( this.shown ) {
-				this.doLog( "Add to homescreen: not displaying callout because already shown on screen" );
+			if ( _instance.shown ) {
+				_instance.doLog( "Add to homescreen: not displaying callout because already shown on screen" );
 				return;
 			}
 
-			this.shown = true;
-
-			// increment the display count
-			session.lastDisplayTime = Date.now();
-			session.displayCount++;
-
-			if ( _instance.options.displayNextPrime ) {
-
-				session.nextSession = nextPrime( session.sessions );
-
-			}
-
-			_instance.updateSession();
+			_instance.shown = true;
 
 			if ( document.readyState === "interactive" || document.readyState === "complete" ) {
-
 				_instance._delayedShow();
-
 			} else {
 
 				document.onreadystatechange = function () {
 
 					if ( document.readyState === 'complete' ) {
-
 						_instance._delayedShow();
 
 					}
@@ -828,7 +837,8 @@
 		},
 
 		_delayedShow: function ( e ) {
-			setTimeout( this._show.bind( this ), this.options.startDelay * 1000 + 500 );
+
+			setTimeout( _instance._show(), _instance.options.startDelay * 1000 + 500 );
 		},
 
 		_show: function () {
@@ -860,7 +870,13 @@
 
 						}
 
-						ath_wrapper.classList.add( ...promptTarget.showClasses );
+						for ( var index = 0; index < promptTarget.showClasses.length; index++ ) {
+
+							ath_wrapper.classList.add( promptTarget.showClasses[ index ] );
+
+						}
+
+						//						ath_wrapper.classList.add( ...promptTarget.showClasses );
 
 						var ath_title = ath_wrapper.querySelector( _instance.options.promptDlg.title ),
 							ath_logo = ath_wrapper.querySelector( _instance.options.promptDlg.logo ),
@@ -904,6 +920,18 @@
 				if ( this.options.onShow ) {
 					this.options.onShow.call( this );
 				}
+
+				// increment the display count
+				session.lastDisplayTime = Date.now();
+				session.displayCount++;
+
+				if ( _instance.options.displayNextPrime ) {
+
+					session.nextSession = nextPrime( session.sessions );
+
+				}
+
+				this.updateSession();
 
 			}
 
