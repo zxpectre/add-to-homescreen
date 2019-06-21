@@ -8,6 +8,7 @@ Prompt Script:
     ✔ add app install custom method @done (4/30/2019, 10:45:39 AM)
     ✔ change libary structure to expose main method and use local methods (my normal style) @done (5/1/2019, 1:40:08 PM)
     ☐ add ability to log to external method
+    ☐ modify prompt configuration to allow multiple prompts on a page
 
 Prompt Management:
     ✔ Complete session (status) object definition @done (4/24/2019, 9:38:44 AM)

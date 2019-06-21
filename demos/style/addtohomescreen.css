@@ -3,7 +3,7 @@
 	display: none;
 	flex-direction: column;
 	z-index: 1000;
-	width: 100%;
+	width: 100vw;
 	background-color: #eee;
 	color: #000;
 	padding: 1%;
@@ -18,7 +18,7 @@
 }
 
 .ath-banner-title {
-	width: calc(100% - 240px);
+	width: 40%;
 	text-align: center;
 	font-size: 1rem;
 	display: flex;
@@ -28,7 +28,7 @@
 
 .ath-banner-cell-2x,
 .ath-banner-cell {
-	width: 70px;
+	width: 20%;
 	margin: 5px;
 	display: flex;
 	align-items: center;
@@ -37,6 +37,13 @@
 
 .ath-banner-cell-2x {
 	width: 120px;
+}
+
+.ath-banner-cell-sm,
+.ath-banner-cell-md,
+.ath-banner-cell-lg,
+.ath-banner-cell-xl {
+	display: none;
 }
 
 .log-target {
@@ -86,7 +93,7 @@
 }
 
 .banner-bottom-center {
-	bottom: 12px;
+	top: calc(100vh - 72px);
 }
 
 .ath-guidance img {
@@ -106,6 +113,10 @@
 		margin: 3px;
 	}
 
+	.ath-banner-cell-sm {
+		display: flex;
+	}
+
 }
 
 @media(min-width: 768px) {
@@ -121,6 +132,10 @@
 
 	.ath-banner-cell-2x {
 		width: 160px;
+	}
+
+	.ath-banner-cell-md {
+		display: flex;
 	}
 
 }
@@ -150,9 +165,19 @@
 		left: 15%;
 	}
 
+	.ath-banner-cell-lg {
+		display: flex;
+	}
+
 }
 
+@media (min-width: 1200px) {
 
+	.ath-banner-cell-lg {
+		display: flex;
+	}
+
+}
 
 .edge-wrapper,
 .firefox-wrapper,

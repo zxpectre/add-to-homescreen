@@ -19,6 +19,7 @@
 
     <link rel="stylesheet" type="text/css" href="style/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="style/addtohomescreen.css">
+    <link rel="stylesheet" type="text/css" href="style/site.css">
     <link rel="stylesheet" type="text/css" href="style/animate.css">
     <meta name="theme-color" content="#fff">
 
@@ -142,19 +143,18 @@
     </div>
     <div class="ath-container banner-bottom-center">
         <div class="ath-banner">
-            <div class="ath-banner-cell">
+            <div class="ath-banner-cell ath-banner-cell-md">
                 <img src="imgs/pwa-logo-50x50.png" alt="PWA" class="ath-prompt-logo">
+            </div>
+            <div class="ath-banner-cell">
+                <button class="btn btn-cancel btn-link">Not Now</button>
             </div>
             <div class="ath-banner-title">
                 <p>Install this PWA?</p>
             </div>
             <div class="ath-banner-cell">
-                <button class="btn btn-cancel btn-link">Not Now</button>
-            </div>
-            <div class="ath-banner-cell">
                 <button class="btn btn-install btn-success">Install</button>
             </div>
-
         </div>
     </div>
 
@@ -162,7 +162,7 @@
     <script src="js/addtohomescreen.js"></script>
     <script>
         var ath = addToHomescreen( {
-            autostart: true,
+            autostart: false,
             autoHide: 0,
             logging: true,
             minSessions: 2,
@@ -183,7 +183,8 @@
             },
             displayNextPrime: true,
             customCriteria: true,
-            displayPace: 1440,
+            displayPace: 0,
+            mustShowCustomPrompt: false,
             //            debug: true,
             customPrompt: {
                 title: "custom message",

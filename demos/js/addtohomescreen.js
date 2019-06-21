@@ -15,6 +15,7 @@
 
 	// load session
 	var appID = "com.love2dev.addtohome",
+		nativePrompt = false,
 		session = localStorage.getItem( appID );
 
 	if ( session && session.added ) {
@@ -24,6 +25,8 @@
 	if ( "onbeforeinstallprompt" in window ) {
 
 		window.addEventListener( "beforeinstallprompt", beforeInstallPrompt );
+
+		nativePrompt = true;
 
 	}
 
@@ -136,9 +139,15 @@
 					_instance._delayedShow();
 				} else if ( err.message.indexOf( "The app is already installed" ) > -1 ) {
 
+					console.log( err.message );
 					session.added = true;
 					_instance.updateSession();
 
+				} else {
+
+					console.log( err );
+
+					return err;
 				}
 
 			} );
@@ -468,6 +477,8 @@
 
 		_beforeInstallPrompt = evt;
 
+		_instance._delayedShow();
+
 	}
 
 	ath.removeSession = function ( appID ) {
@@ -631,6 +642,10 @@
 
 			_instance.show();
 
+		} else if ( !nativePrompt ) {
+
+			_instance.show();
+
 		}
 
 	}
@@ -639,6 +654,7 @@
 
 		_canPrompt: undefined,
 
+		//performs various checks to see if we are cleared for prompting
 		canPrompt: function () {
 
 			//already evaluated the situation, so don't do it again
@@ -816,7 +832,6 @@
 
 					if ( document.readyState === 'complete' ) {
 						_instance._delayedShow();
-
 					}
 
 				};
