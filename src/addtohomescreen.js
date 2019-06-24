@@ -1,6 +1,5 @@
 /* Add to Homescreen v4.0.0 ~ (c) 2019 Chris Love ~ @license: https://love2dev.com/pwa/add-to-homescreen/ */
 
-
 ( function ( window, document, undefined ) {
 
 	"use strict";
@@ -16,6 +15,7 @@
 
 	// load session
 	var appID = "com.love2dev.addtohome",
+		nativePrompt = false,
 		session = localStorage.getItem( appID );
 
 	if ( session && session.added ) {
@@ -25,6 +25,8 @@
 	if ( "onbeforeinstallprompt" in window ) {
 
 		window.addEventListener( "beforeinstallprompt", beforeInstallPrompt );
+
+		nativePrompt = true;
 
 	}
 
@@ -85,15 +87,10 @@
 		platform.isCompatible = ( platform.isChromium || platform.isMobileSafari ||
 			platform.isSamsung || platform.isFireFox || platform.isOpera );
 
-		var foo = true,
-			bar = false;
-
-		console.log( "foo bar: ", foo || bar );
-
-		console.log( "platform.isiPhone: " + platform.isiPhone );
-		console.log( "platform.isMobileSafari: " + platform.isMobileSafari );
-		console.log( "platform.isInWebAppiOS: " + platform.isInWebAppiOS );
-		console.log( "platform.isCompatible: " + platform.isCompatible );
+		// console.log( "platform.isiPhone: " + platform.isiPhone );
+		// console.log( "platform.isMobileSafari: " + platform.isMobileSafari );
+		// console.log( "platform.isInWebAppiOS: " + platform.isInWebAppiOS );
+		// console.log( "platform.isCompatible: " + platform.isCompatible );
 
 	}
 
@@ -142,17 +139,21 @@
 					_instance._delayedShow();
 				} else if ( err.message.indexOf( "The app is already installed" ) > -1 ) {
 
+					console.log( err.message );
 					session.added = true;
 					_instance.updateSession();
 
+				} else {
+
+					console.log( err );
+
+					return err;
 				}
 
 			} );
 	}
 
 	function getPlatform( native ) {
-
-		console.log( "getting platform " );
 
 		if ( _instance.options.debug &&
 			typeof _instance.options.debug === "string" ) {
@@ -178,8 +179,6 @@
 		} else {
 			return "";
 		}
-
-		console.log( "got platform " );
 
 	}
 
@@ -478,6 +477,8 @@
 
 		_beforeInstallPrompt = evt;
 
+		_instance._delayedShow();
+
 	}
 
 	ath.removeSession = function ( appID ) {
@@ -641,6 +642,10 @@
 
 			_instance.show();
 
+		} else if ( !nativePrompt ) {
+
+			_instance.show();
+
 		}
 
 	}
@@ -649,9 +654,8 @@
 
 		_canPrompt: undefined,
 
+		//performs various checks to see if we are cleared for prompting
 		canPrompt: function () {
-
-			this.doLog( "start canPrompt ", this );
 
 			//already evaluated the situation, so don't do it again
 			if ( this._canPrompt !== undefined ) {
@@ -660,7 +664,8 @@
 
 			this._canPrompt = false;
 
-			if ( _instance.options.customCriteria !== null || _instance.options.customCriteria !== undefined ) {
+			if ( _instance.options.customCriteria !== null ||
+				_instance.options.customCriteria !== undefined ) {
 
 				var passCustom = false;
 
@@ -827,7 +832,6 @@
 
 					if ( document.readyState === 'complete' ) {
 						_instance._delayedShow();
-
 					}
 
 				};
