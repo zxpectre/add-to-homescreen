@@ -329,7 +329,7 @@
 		autostart: true, // show the message automatically
 		skipFirstVisit: false, // show only to returning visitors (ie: skip the first time you visit)
 		minSessions: 0, //show only after minimum number of page views
-		startDelay: 1, // display the message after that many seconds from page load
+		startDelay: 60, // display the message after that many seconds from page load
 		lifespan: 15, // life of the message in seconds
 		displayPace: 1440, // minutes before the message is shown again (0: display every time, default 24 hours)
 		displayNextPrime: false,
@@ -622,6 +622,7 @@
 		_instance.options.modal = _instance.options.modal || _instance.options.mandatory;
 
 		if ( _instance.options.mandatory ) {
+			_instance.doLog( "Add to homescreen: make the popup hasty because mandatory = true" );
 			_instance.options.startDelay = -0.5; // make the popup hasty
 		}
 
@@ -840,8 +841,11 @@
 		},
 
 		_delayedShow: function ( e ) {
-
-			setTimeout( _instance._show(), _instance.options.startDelay * 1000 + 500 );
+			_instance.doLog( "Add to homescreen: delayedShow() based on startDelay = "+_instance.options.startDelay );
+			setTimeout( function () {
+				_instance.doLog( "Add to homescreen: delayedShow() calling _show() right now");
+				_instance._show()
+			}, _instance.options.startDelay * 1000 + 500 );
 		},
 
 		_show: function () {
@@ -954,10 +958,13 @@
 			if ( ath_wrapper ) {
 
 				var promptTarget = _instance.options.prompt[ target ];
-				promptTarget.showClasses = promptTarget.showClasses.concat( _instance.options.showClasses );
-
-				ath_wrapper.classList.remove( ...promptTarget.showClasses );
-				ath_wrapper.classList.add( _instance.options.hideClass );
+				if (promptTarget){
+					promptTarget.showClasses = promptTarget.showClasses.concat( _instance.options.showClasses );
+					ath_wrapper.classList.remove( ...promptTarget.showClasses );
+					ath_wrapper.classList.add( _instance.options.hideClass );
+				} else {
+					_instance.doLog( "Add to homescreen: WARNING: promptTarget is missing" );
+				}
 
 			}
 
